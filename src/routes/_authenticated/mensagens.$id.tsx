@@ -192,23 +192,65 @@ function DetalheMensagem() {
 
         <dl className="grid gap-4 text-sm sm:grid-cols-3">
           <div>
-            <dt className="text-xs text-muted-foreground">Órgão</dt>
-            <dd className="font-medium">{mensagem.orgao}</dd>
+            <dt className="text-xs text-muted-foreground">Remetente</dt>
+            <dd className="font-medium">{mensagem.remetente ?? mensagem.orgao}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Recebida em</dt>
+            <dt className="text-xs text-muted-foreground">Tipo</dt>
+            <dd className="font-medium">{mensagem.tipo ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">NI</dt>
+            <dd className="font-medium">{mensagem.ni ?? mensagem.cnpj_contribuinte}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Enviada em</dt>
             <dd className="font-medium">{formatarData(mensagem.data_recebimento)}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Leitura automática (GOB)</dt>
+            <dt className="text-xs text-muted-foreground">Exibição até</dt>
+            <dd className="font-medium">{formatarData(mensagem.exibicao_ate, false)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Triagem</dt>
+            <dd className="font-medium">{TRIAGEM_LABEL[mensagem.triagem] ?? mensagem.triagem}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Organização</dt>
+            <dd className="font-medium">{mensagem.organizacao ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Tag</dt>
+            <dd className="font-medium">{mensagem.tag ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Situação no GOB</dt>
             <dd className="font-medium">
-              {mensagem.leitura_gob ? (
+              {[
+                mensagem.ativo ? "Ativa" : "Inativa",
+                mensagem.arquivada ? "Arquivada" : null,
+                mensagem.importante ? "Importante" : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </dd>
+          </div>
+          <div className="sm:col-span-3">
+            <dt className="text-xs text-muted-foreground">Primeira leitura</dt>
+            <dd className="font-medium">
+              {leituraHumana ? (
                 <span className="inline-flex items-center gap-1 text-success">
-                  <MailCheck className="size-4" /> {formatarData(mensagem.data_leitura_gob)}
+                  <MailCheck className="size-4" /> {leituraHumana.quem} ·{" "}
+                  {formatarData(leituraHumana.quando)}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-muted-foreground">
-                  <MailX className="size-4" /> Não registrada
+                <span className="inline-flex items-center gap-1 text-warning">
+                  <MailX className="size-4" /> Pendente — aguardando visualização de um colaborador
+                </span>
+              )}
+              {mensagem.primeira_leitura_gob && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  (GOB informou leitura no e-CAC em {formatarData(mensagem.primeira_leitura_gob)})
                 </span>
               )}
             </dd>
@@ -223,6 +265,7 @@ function DetalheMensagem() {
           <Eye className="size-3.5" />
           {(mensagem.visualizacoes ?? []).length} visualização(ões) por colaboradores
         </p>
+
       </header>
 
       <section className="surface-panel space-y-4 p-6">
