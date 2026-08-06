@@ -61,49 +61,85 @@ export type Database = {
       }
       mensagens: {
         Row: {
+          arquivada: boolean
           assunto: string
+          ativo: boolean
           atualizado_em: string
           cnpj_contribuinte: string
           conteudo: string
           criado_em: string
           data_leitura_gob: string | null
           data_recebimento: string
+          exibicao_ate: string | null
+          gob_id: string | null
           id: string
+          importante: boolean
           leitura_gob: boolean
+          ni: string | null
           nome_contribuinte: string
+          organizacao: string | null
           orgao: string
+          primeira_leitura_gob: string | null
           protocolo: string
+          remetente: string | null
           status_geral: string
+          tag: string | null
+          tipo: string | null
+          triagem: string
         }
         Insert: {
+          arquivada?: boolean
           assunto: string
+          ativo?: boolean
           atualizado_em?: string
           cnpj_contribuinte: string
           conteudo?: string
           criado_em?: string
           data_leitura_gob?: string | null
           data_recebimento?: string
+          exibicao_ate?: string | null
+          gob_id?: string | null
           id?: string
+          importante?: boolean
           leitura_gob?: boolean
+          ni?: string | null
           nome_contribuinte: string
+          organizacao?: string | null
           orgao: string
+          primeira_leitura_gob?: string | null
           protocolo: string
+          remetente?: string | null
           status_geral?: string
+          tag?: string | null
+          tipo?: string | null
+          triagem?: string
         }
         Update: {
+          arquivada?: boolean
           assunto?: string
+          ativo?: boolean
           atualizado_em?: string
           cnpj_contribuinte?: string
           conteudo?: string
           criado_em?: string
           data_leitura_gob?: string | null
           data_recebimento?: string
+          exibicao_ate?: string | null
+          gob_id?: string | null
           id?: string
+          importante?: boolean
           leitura_gob?: boolean
+          ni?: string | null
           nome_contribuinte?: string
+          organizacao?: string | null
           orgao?: string
+          primeira_leitura_gob?: string | null
           protocolo?: string
+          remetente?: string | null
           status_geral?: string
+          tag?: string | null
+          tipo?: string | null
+          triagem?: string
         }
         Relationships: []
       }
@@ -182,6 +218,39 @@ export type Database = {
           id?: string
           nome_completo?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      sincronizacoes_gob: {
+        Row: {
+          atualizadas: number
+          concluido_em: string | null
+          criado_em: string
+          erro: string | null
+          id: string
+          iniciado_em: string
+          novas: number
+          situacao: string
+        }
+        Insert: {
+          atualizadas?: number
+          concluido_em?: string | null
+          criado_em?: string
+          erro?: string | null
+          id?: string
+          iniciado_em?: string
+          novas?: number
+          situacao?: string
+        }
+        Update: {
+          atualizadas?: number
+          concluido_em?: string | null
+          criado_em?: string
+          erro?: string | null
+          id?: string
+          iniciado_em?: string
+          novas?: number
+          situacao?: string
         }
         Relationships: []
       }
