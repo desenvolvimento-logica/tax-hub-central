@@ -26,6 +26,7 @@ import {
   useSessao,
   type Mensagem,
 } from "@/lib/hub";
+import { TRIAGEM_LABEL, primeiraLeituraHumana } from "@/lib/gob";
 import { statusVariant } from "./mensagens.index";
 
 export const Route = createFileRoute("/_authenticated/mensagens/$id")({
@@ -144,6 +145,8 @@ function DetalheMensagem() {
       </div>
     );
   }
+
+  const leituraHumana = primeiraLeituraHumana(mensagem.visualizacoes);
 
   const historico = [
     ...(mensagem.visualizacoes ?? []).map((v) => ({
