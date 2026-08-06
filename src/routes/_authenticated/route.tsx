@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } 
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Building2,
+  FileStack,
   LayoutGrid,
   LogOut,
   MailCheck,
@@ -29,7 +30,8 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/portal", label: "Portal", icon: LayoutGrid, gestor: false },
-  { to: "/mensagens", label: "Mensagens e-CAC", icon: MailCheck, gestor: false },
+  { to: "/perdcomp", label: "PERDCOMP", icon: FileStack, gestor: false },
+  { to: "/mensagens", label: "Caixa Postal e-CAC", icon: MailCheck, gestor: false },
   { to: "/painel", label: "Painel gerencial", icon: ChartNoAxesColumn, gestor: false },
   { to: "/admin", label: "Administração", icon: Settings2, gestor: true },
   { to: "/perfil", label: "Meu perfil", icon: UserRound, gestor: false },
