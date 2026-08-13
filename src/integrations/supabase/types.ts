@@ -363,10 +363,6 @@ export type Database = {
     Functions: {
       bootstrap_primeiro_admin: { Args: never; Returns: boolean }
       e_gestor: { Args: { _user_id: string }; Returns: boolean }
-      marcar_mensagem_visualizada: {
-        Args: { _mensagem_id: string }
-        Returns: undefined
-      }
       meu_perfil_id: { Args: never; Returns: string }
       tem_papel: { Args: { _nome: string; _user_id: string }; Returns: boolean }
     }
