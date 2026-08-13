@@ -118,16 +118,41 @@ export const sincronizarPerdcomp = createServerFn({ method: "POST" })
 export const listarDeclaracoes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    async function todasDeclaracoes() {
+      const PAGINA = 1000;
+      const total: Declaracao[] = [];
+      for (let inicio = 0; inicio < 6000; inicio += PAGINA) {
+        const { data } = await context.supabase
+          .from("declaracoes")
+          .select(CAMPOS_DECLARACAO)
+          .order("data_transmissao", { ascending: false, nullsFirst: false })
+          .range(inicio, inicio + PAGINA - 1);
+        const bloco = (data ?? []) as Declaracao[];
+        total.push(...bloco);
+        if (bloco.length < PAGINA) break;
+      }
+      return total;
+    }
+
+    async function todosAchados() {
+      const PAGINA = 1000;
+      const total: Achado[] = [];
+      for (let inicio = 0; inicio < 6000; inicio += PAGINA) {
+        const { data } = await context.supabase
+          .from("auditoria_achados")
+          .select("id, declaracao_id, codigo, descricao, severidade, revisado, revisado_em, criado_em")
+          .range(inicio, inicio + PAGINA - 1);
+        const bloco = (data ?? []) as Achado[];
+        total.push(...bloco);
+        if (bloco.length < PAGINA) break;
+      }
+      return total;
+    }
+
     const [declaracoes, acompanhamentos, achados, alertas] = await Promise.all([
-      context.supabase
-        .from("declaracoes")
-        .select(CAMPOS_DECLARACAO)
-        .order("data_transmissao", { ascending: false, nullsFirst: false })
-        .limit(3000),
+      todasDeclaracoes(),
       context.supabase.from("acompanhamentos").select(CAMPOS_ACOMPANHAMENTO),
-      context.supabase
-        .from("auditoria_achados")
-        .select("id, declaracao_id, codigo, descricao, severidade, revisado, revisado_em, criado_em"),
+      todosAchados(),
       context.supabase
         .from("alertas")
         .select("id, declaracao_id, tipo, prioridade, mensagem, resolvido, resolvido_em, criado_em")
@@ -136,9 +161,9 @@ export const listarDeclaracoes = createServerFn({ method: "GET" })
     ]);
 
     return {
-      declaracoes: (declaracoes.data ?? []) as Declaracao[],
+      declaracoes,
       acompanhamentos: (acompanhamentos.data ?? []) as Acompanhamento[],
-      achados: (achados.data ?? []) as Achado[],
+      achados,
       alertas: (alertas.data ?? []) as Alerta[],
     };
   });
@@ -254,7 +279,7 @@ export const salvarAcompanhamento = createServerFn({ method: "POST" })
     const mudancas = diferencas(anterior as Record<string, unknown> | null, data);
     if (mudancas.length) {
       await supabaseAdmin.from("log_alteracoes").insert(
-        mudancas.map((m) => ({
+        mudancas.map((m: { campo: string; anterior: string | null; novo: string | null }) => ({
           declaracao_id: data.declaracao_id,
           usuario_id: perfil?.id ?? null,
           usuario_nome: perfil?.nome_completo ?? "",
