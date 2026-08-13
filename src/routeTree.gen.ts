@@ -14,7 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedBoasVindasRouteImport } from './routes/_authenticated/boas-vindas'
-import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
+import { Route as AuthenticatedDiagnosticoRouteImport } from './routes/_authenticated/diagnostico'
 import { Route as AuthenticatedPerdcompRouteImport } from './routes/_authenticated/perdcomp'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
@@ -45,11 +45,12 @@ const AuthenticatedBoasVindasRoute = AuthenticatedBoasVindasRouteImport.update({
   path: '/boas-vindas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
-  id: '/painel',
-  path: '/painel',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+const AuthenticatedDiagnosticoRoute =
+  AuthenticatedDiagnosticoRouteImport.update({
+    id: '/diagnostico',
+    path: '/diagnostico',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPerdcompRoute = AuthenticatedPerdcompRouteImport.update({
   id: '/perdcomp',
   path: '/perdcomp',
@@ -83,7 +84,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/boas-vindas': typeof AuthenticatedBoasVindasRoute
-  '/painel': typeof AuthenticatedPainelRoute
+  '/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/perdcomp': typeof AuthenticatedPerdcompRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/portal': typeof AuthenticatedPortalRoute
@@ -95,7 +96,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/boas-vindas': typeof AuthenticatedBoasVindasRoute
-  '/painel': typeof AuthenticatedPainelRoute
+  '/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/perdcomp': typeof AuthenticatedPerdcompRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/portal': typeof AuthenticatedPortalRoute
@@ -109,7 +110,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/boas-vindas': typeof AuthenticatedBoasVindasRoute
-  '/_authenticated/painel': typeof AuthenticatedPainelRoute
+  '/_authenticated/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/_authenticated/perdcomp': typeof AuthenticatedPerdcompRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
@@ -123,7 +124,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/boas-vindas'
-    | '/painel'
+    | '/diagnostico'
     | '/perdcomp'
     | '/perfil'
     | '/portal'
@@ -135,7 +136,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/boas-vindas'
-    | '/painel'
+    | '/diagnostico'
     | '/perdcomp'
     | '/perfil'
     | '/portal'
@@ -148,7 +149,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/admin'
     | '/_authenticated/boas-vindas'
-    | '/_authenticated/painel'
+    | '/_authenticated/diagnostico'
     | '/_authenticated/perdcomp'
     | '/_authenticated/perfil'
     | '/_authenticated/portal'
@@ -199,11 +200,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBoasVindasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/painel': {
-      id: '/_authenticated/painel'
-      path: '/painel'
-      fullPath: '/painel'
-      preLoaderRoute: typeof AuthenticatedPainelRouteImport
+    '/_authenticated/diagnostico': {
+      id: '/_authenticated/diagnostico'
+      path: '/diagnostico'
+      fullPath: '/diagnostico'
+      preLoaderRoute: typeof AuthenticatedDiagnosticoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/perdcomp': {
@@ -247,7 +248,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBoasVindasRoute: typeof AuthenticatedBoasVindasRoute
-  AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+  AuthenticatedDiagnosticoRoute: typeof AuthenticatedDiagnosticoRoute
   AuthenticatedPerdcompRoute: typeof AuthenticatedPerdcompRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
@@ -258,7 +259,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBoasVindasRoute: AuthenticatedBoasVindasRoute,
-  AuthenticatedPainelRoute: AuthenticatedPainelRoute,
+  AuthenticatedDiagnosticoRoute: AuthenticatedDiagnosticoRoute,
   AuthenticatedPerdcompRoute: AuthenticatedPerdcompRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,

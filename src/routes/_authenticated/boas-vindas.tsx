@@ -1,26 +1,38 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Printer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import pagina1 from "@/assets/boas-vindas-p1.jpg.asset.json";
-import pagina2 from "@/assets/boas-vindas-p2.jpg.asset.json";
+import {
+  Aviso,
+  CabecalhoMarca,
+  CONTATO,
+  EstilosDocumento,
+  FaixaSecao,
+  LOGO_URL,
+  MARCA,
+  RodapeDocumento,
+} from "@/components/documento";
+import amanda from "@/assets/equipe-amanda.png.asset.json";
+import gabrielly from "@/assets/equipe-gabrielly.png.asset.json";
+import leticia from "@/assets/equipe-leticia.png.asset.json";
+import matheus from "@/assets/equipe-matheus.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/boas-vindas")({
   head: () => ({
     meta: [
-      { title: "Gerador de boas-vindas — HUB Tributário" },
+      { title: "Comunicado boas-vindas — HUB Tributário" },
       {
         name: "description",
         content:
-          "Gere o material de boas-vindas do departamento tributário informando o nome da empresa e do colaborador responsável.",
+          "Gere o comunicado de boas-vindas do departamento tributário informando o nome da empresa e do colaborador responsável.",
       },
-      { property: "og:title", content: "Gerador de boas-vindas — HUB Tributário" },
+      { property: "og:title", content: "Comunicado boas-vindas — HUB Tributário" },
       {
         property: "og:description",
-        content: "Material de boas-vindas personalizado com nome da empresa e colaborador responsável.",
+        content: "Comunicado de boas-vindas personalizado com nome da empresa e colaborador responsável.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -29,27 +41,76 @@ export const Route = createFileRoute("/_authenticated/boas-vindas")({
   component: BoasVindas,
 });
 
-function useFit(texto: string, maxPx: number, minPx: number) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const ajustar = () => {
-      let size = maxPx;
-      el.style.fontSize = `${size}px`;
-      while (el.scrollWidth > el.clientWidth && size > minPx) {
-        size -= 1;
-        el.style.fontSize = `${size}px`;
-      }
-    };
-    const id = requestAnimationFrame(ajustar);
-    window.addEventListener("resize", ajustar);
-    return () => {
-      cancelAnimationFrame(id);
-      window.removeEventListener("resize", ajustar);
-    };
-  }, [texto, maxPx, minPx]);
-  return ref;
+const EQUIPE = [
+  {
+    nome: "Gabrielly Lima",
+    foto: gabrielly.url,
+    email: "gabriellylima.tributario@escritoriologica.com.br",
+    ramal: "Ramal 230",
+    celular: "(19) 99742-8429",
+  },
+  {
+    nome: "Letícia Neres",
+    foto: leticia.url,
+    email: "leticiapeder.tributario@escritoriologica.com.br",
+    ramal: "Ramal 361",
+    celular: "(19) 99742-8429",
+  },
+  {
+    nome: "Matheus Neves",
+    foto: matheus.url,
+    email: "matheusneves.tributario@escritoriologica.com.br",
+    ramal: "Ramal 331",
+    celular: "(19) 99742-8429",
+  },
+];
+
+const ROTINAS = [
+  "Levantamento de débitos;",
+  "Recálculo de guias;",
+  "Acompanhamento e envio de guias de parcelamentos;",
+  "Emissão de Certidões Negativas de Débitos (CND);",
+  "Simulação e adesão a parcelamentos;",
+  "Suporte no acompanhamento da Caixa de Mensagens do e-CAC.",
+];
+
+const ESPECIALIZADAS = [
+  "Restituições e Compensações via PER/DCOMP;",
+  "Atendimento de intimações e despachos decisórios;",
+  "Ressarcimentos e Compensações via E-Credac;",
+  "Estudos de parcelamentos especiais;",
+  "Abertura e acompanhamento de Processos Administrativos Municipais, Estaduais e Federais;",
+  "Atendimento e acompanhamento de Fiscalizações.",
+];
+
+function Marcador() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        marginTop: "0.45em",
+        display: "inline-block",
+        width: "0.42em",
+        height: "0.42em",
+        flex: "0 0 auto",
+        borderRadius: "999px",
+        background: MARCA.dourado,
+      }}
+    />
+  );
+}
+
+function Lista({ itens }: { itens: string[] }) {
+  return (
+    <ul style={{ listStyle: "none", margin: "0 0 1em", padding: 0, display: "grid", gap: "0.35em" }}>
+      {itens.map((item) => (
+        <li key={item} style={{ display: "flex", gap: "0.6em", alignItems: "flex-start" }}>
+          <Marcador />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 function BoasVindas() {
@@ -57,14 +118,12 @@ function BoasVindas() {
   const [colaborador, setColaborador] = useState("");
   const [erro, setErro] = useState("");
 
-  const textoEmpresa = empresa.trim() ? `${empresa.trim().toUpperCase()},` : "NOME DO CLIENTE,";
-  const textoColaborador = colaborador.trim() || "NOME DO COLABORADOR";
-
-  const refEmpresa = useFit(textoEmpresa, 46, 25);
-  const refColaborador = useFit(textoColaborador, 18, 11);
+  const nomeEmpresa = empresa.trim() ? empresa.trim().toUpperCase() : "NOME DO CLIENTE";
+  const nomeColaborador = colaborador.trim() || "NOME DO COLABORADOR";
+  const preenchido = Boolean(empresa.trim() && colaborador.trim());
 
   function gerar() {
-    if (!empresa.trim() || !colaborador.trim()) {
+    if (!preenchido) {
       setErro("Preencha o nome da empresa e do colaborador responsável.");
       return;
     }
@@ -74,22 +133,13 @@ function BoasVindas() {
 
   return (
     <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
-      <style>{`
-        @media print {
-          @page { size: A4; margin: 0; }
-          body * { visibility: hidden !important; }
-          #bv-preview, #bv-preview * { visibility: visible !important; }
-          #bv-preview { position: absolute; inset: 0; margin: 0; padding: 0; display: block; }
-          #bv-preview .bv-page { width: 210mm; height: 297mm; aspect-ratio: auto; box-shadow: none; page-break-after: always; }
-          #bv-preview .bv-page:last-child { page-break-after: auto; }
-        }
-      `}</style>
+      <EstilosDocumento />
 
       <aside className="surface-panel h-fit p-6 print:hidden">
-        <h1 className="text-xl font-semibold">Gerador de boas-vindas</h1>
+        <h1 className="text-xl font-semibold">Comunicado boas-vindas</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Informe o nome da empresa e do colaborador responsável. A prévia é atualizada
-          automaticamente, mantendo o material original.
+          automaticamente e o comunicado sai em A4, com duas páginas.
         </p>
 
         <div className="mt-6 space-y-4">
@@ -120,65 +170,276 @@ function BoasVindas() {
           {erro ? <p className="text-xs text-destructive">{erro}</p> : null}
           <p className="rounded-md bg-secondary p-3 text-xs text-muted-foreground">
             <strong>Como salvar:</strong> clique em “Gerar PDF” e, na janela de impressão, escolha
-            “Salvar como PDF”. O documento sai em A4, com duas páginas.
+            “Salvar como PDF”.
           </p>
         </div>
       </aside>
 
-      <main id="bv-preview" className="flex flex-col items-center gap-7">
-        <section
-          aria-label="Página 1"
-          className="bv-page relative w-full overflow-hidden bg-white shadow-lg"
-          style={{ aspectRatio: "210 / 297" }}
-        >
-          <img
-            src={pagina1.url}
-            alt="Página 1 do material de boas-vindas"
-            className="absolute inset-0 block size-full"
-            style={{ objectFit: "fill" }}
-          />
-          <div
-            ref={refEmpresa}
-            className="absolute flex items-center justify-center whitespace-nowrap text-center font-bold leading-none"
-            style={{
-              left: "12.6%",
-              top: "25.9%",
-              width: "74.8%",
-              height: "6.4%",
-              fontFamily: "Arial, Helvetica, sans-serif",
-              color: "#000",
-              opacity: empresa.trim() ? 1 : 0.55,
-            }}
-          >
-            {textoEmpresa}
+      <main className="doc-preview">
+        {/* Página 1 — capa/comunicado */}
+        <section aria-label="Página 1" className="doc-page">
+          <div className="doc-body">
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: `radial-gradient(120% 60% at 85% -10%, ${MARCA.douradoSuave} 0%, transparent 60%), linear-gradient(180deg, #fff 0%, ${MARCA.creme} 55%, ${MARCA.cinza} 100%)`,
+              }}
+            />
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: "2.4%",
+                background: `linear-gradient(180deg, ${MARCA.dourado}, ${MARCA.douradoEscuro})`,
+              }}
+            />
+
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                flexDirection: "column",
+                flex: 1,
+                padding: "9% 10% 0 12%",
+              }}
+            >
+              <img src={LOGO_URL} alt="Lógica Assessoria Contábil" style={{ width: "44%", alignSelf: "center" }} />
+
+              <p
+                style={{
+                  marginTop: "9%",
+                  fontSize: "0.95em",
+                  letterSpacing: "0.28em",
+                  textTransform: "uppercase",
+                  color: MARCA.douradoEscuro,
+                  fontWeight: 600,
+                }}
+              >
+                Departamento Tributário
+              </p>
+
+              <h1
+                style={{
+                  margin: "0.5em 0 0",
+                  fontFamily: '"Space Grotesk", Arial, sans-serif',
+                  fontSize: "2.9em",
+                  lineHeight: 1.05,
+                  fontWeight: 700,
+                  wordBreak: "break-word",
+                  opacity: empresa.trim() ? 1 : 0.5,
+                }}
+              >
+                {nomeEmpresa},
+              </h1>
+              <p
+                style={{
+                  margin: "0.35em 0 0",
+                  fontFamily: '"Space Grotesk", Arial, sans-serif',
+                  fontSize: "2.1em",
+                  fontWeight: 500,
+                  color: MARCA.douradoEscuro,
+                }}
+              >
+                seja muito bem-vindo(a)!
+              </p>
+
+              <div
+                style={{
+                  marginTop: "7%",
+                  alignSelf: "flex-start",
+                  borderRadius: "999px",
+                  background: `linear-gradient(90deg, ${MARCA.dourado}, ${MARCA.douradoSuave})`,
+                  padding: "0.7em 1.6em",
+                  fontSize: "1.05em",
+                  fontWeight: 600,
+                }}
+              >
+                Sabemos que sua empresa é muito mais do que um <strong>CNPJ</strong>
+              </div>
+
+              <div
+                style={{
+                  marginTop: "6%",
+                  background: "#fff",
+                  border: `1px solid ${MARCA.cinza}`,
+                  borderTop: `3px solid ${MARCA.dourado}`,
+                  padding: "6% 6% 5%",
+                  fontSize: "1.15em",
+                  lineHeight: 1.75,
+                }}
+              >
+                <p style={{ margin: "0 0 1em" }}>
+                  Ela representa dedicação, trabalho e muitos sonhos construídos ao longo do caminho.
+                </p>
+                <p style={{ margin: "0 0 1.2em" }}>
+                  Por isso, a equipe do Tributário estará ao seu lado, oferecendo suporte, cuidado e
+                  orientação para que o seu negócio continue crescendo com segurança.
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontWeight: 700,
+                    fontSize: "1.1em",
+                    color: MARCA.grafite,
+                  }}
+                >
+                  Conte conosco em cada etapa dessa jornada!
+                </p>
+              </div>
+
+              <div
+                style={{
+                  marginTop: "auto",
+                  marginBottom: "8%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5%",
+                  borderTop: `2px solid ${MARCA.dourado}`,
+                  paddingTop: "5%",
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "0.72em",
+                      letterSpacing: "0.24em",
+                      textTransform: "uppercase",
+                      color: MARCA.douradoEscuro,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Seu contato no Departamento Tributário
+                  </p>
+                  <p
+                    style={{
+                      margin: "0.35em 0 0",
+                      fontSize: "1.6em",
+                      fontWeight: 700,
+                      fontFamily: '"Space Grotesk", Arial, sans-serif',
+                      opacity: colaborador.trim() ? 1 : 0.5,
+                    }}
+                  >
+                    {nomeColaborador}
+                  </p>
+                </div>
+                <div
+                  aria-hidden="true"
+                  style={{
+                    width: "22%",
+                    height: "0.5em",
+                    background: `linear-gradient(90deg, ${MARCA.douradoSuave}, ${MARCA.dourado})`,
+                  }}
+                />
+              </div>
+            </div>
+
+            <RodapeDocumento pagina={1} total={2} />
           </div>
         </section>
 
-        <section
-          aria-label="Página 2"
-          className="bv-page relative w-full overflow-hidden bg-white shadow-lg"
-          style={{ aspectRatio: "210 / 297" }}
-        >
-          <img
-            src={pagina2.url}
-            alt="Página 2 do material de boas-vindas"
-            className="absolute inset-0 block size-full"
-            style={{ objectFit: "fill" }}
-          />
-          <div
-            ref={refColaborador}
-            className="absolute flex items-center justify-center overflow-hidden whitespace-nowrap text-center font-bold leading-none"
-            style={{
-              left: "60%",
-              top: "47.14%",
-              width: "24.7%",
-              height: "2.45%",
-              fontFamily: "Arial, Helvetica, sans-serif",
-              color: "#000",
-              opacity: colaborador.trim() ? 1 : 0.55,
-            }}
-          >
-            {textoColaborador}
+        {/* Página 2 — equipe e atendimento */}
+        <section aria-label="Página 2" className="doc-page">
+          <div className="doc-body" style={{ background: "#fff" }}>
+            <CabecalhoMarca titulo="Comunicado de boas-vindas" />
+
+            <div style={{ padding: "3% 8% 0", fontSize: "1em", lineHeight: 1.6 }}>
+              <FaixaSecao>
+                Conheça a equipe do Departamento Tributário e o responsável pelo seu atendimento
+              </FaixaSecao>
+
+              <div style={{ textAlign: "center", marginBottom: "3%" }}>
+                <img
+                  src={amanda.url}
+                  alt="Amanda Alves, coordenadora do Departamento Tributário"
+                  style={{
+                    width: "18%",
+                    borderRadius: "999px",
+                    border: `3px solid ${MARCA.dourado}`,
+                    background: "#fff",
+                  }}
+                />
+                <p style={{ margin: "0.5em 0 0.15em", fontWeight: 700 }}>Amanda Alves (Coordenadora)</p>
+                <p style={{ margin: 0, fontSize: "0.8em", color: MARCA.grafiteClaro }}>
+                  {CONTATO.email} · {CONTATO.telefone} — Ramal 302 · (19) 99767-0445
+                </p>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "3%" }}>
+                {EQUIPE.map((pessoa) => (
+                  <div key={pessoa.nome} style={{ textAlign: "center" }}>
+                    <img
+                      src={pessoa.foto}
+                      alt={pessoa.nome}
+                      style={{
+                        width: "58%",
+                        borderRadius: "999px",
+                        border: `3px solid ${MARCA.dourado}`,
+                        background: "#fff",
+                      }}
+                    />
+                    <p style={{ margin: "0.45em 0 0.15em", fontWeight: 700, fontSize: "0.92em" }}>
+                      {pessoa.nome}
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "0.68em",
+                        lineHeight: 1.45,
+                        color: MARCA.grafiteClaro,
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {pessoa.email}
+                      <br />
+                      {CONTATO.telefone} — {pessoa.ramal}
+                      <br />
+                      {pessoa.celular}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginTop: "4%" }}>
+                <FaixaSecao>Seu atendimento no Departamento Tributário</FaixaSecao>
+                <p style={{ margin: "0 0 0.9em" }}>
+                  O seu contato principal no Departamento Tributário será{" "}
+                  <strong
+                    style={{
+                      color: MARCA.douradoEscuro,
+                      opacity: colaborador.trim() ? 1 : 0.55,
+                    }}
+                  >
+                    {nomeColaborador}
+                  </strong>
+                  , profissional responsável pelo acompanhamento das demandas rotineiras da sua
+                  empresa e pelo suporte direto sempre que necessário.
+                </p>
+                <p style={{ margin: "0 0 0.6em", fontWeight: 600 }}>
+                  Entre as principais atividades sob sua responsabilidade estão:
+                </p>
+                <Lista itens={ROTINAS} />
+
+                <FaixaSecao>Demandas Especializadas</FaixaSecao>
+                <p style={{ margin: "0 0 0.6em" }}>
+                  Para demandas que exigem análise técnica específica, a responsável será{" "}
+                  <strong>Letícia Neres</strong>, que atuará diretamente nos seguintes assuntos:
+                </p>
+                <Lista itens={ESPECIALIZADAS} />
+
+                <Aviso titulo="Nossa equipe está à sua disposição">
+                  Garantimos um atendimento ágil, seguro e eficiente, com o acompanhamento adequado
+                  das demandas da sua empresa.
+                </Aviso>
+              </div>
+            </div>
+
+            <RodapeDocumento pagina={2} total={2} />
           </div>
         </section>
       </main>
