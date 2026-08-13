@@ -564,11 +564,12 @@ function ListaMensagens() {
                         <span className="inline-flex items-center gap-1">
                           <EyeOff className="size-3.5" /> Pendente
                         </span>
-                        {m.primeira_leitura_gob && (
+                        {m.data_leitura_gob && (
                           <span className="text-muted-foreground">
-                            e-CAC: {formatarData(m.primeira_leitura_gob)}
+                            e-CAC: {formatarData(m.data_leitura_gob)}
                           </span>
                         )}
+
                       </span>
                     )}
                   </TableCell>
