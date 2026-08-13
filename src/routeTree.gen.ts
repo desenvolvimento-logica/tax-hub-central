@@ -17,6 +17,7 @@ import { Route as AuthenticatedBoasVindasRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedDiagnosticoIndexRouteImport } from './routes/_authenticated/diagnostico.index'
+import { Route as AuthenticatedDiagnosticoIdRouteImport } from './routes/_authenticated/diagnostico.$id'
 import { Route as AuthenticatedMensagensIndexRouteImport } from './routes/_authenticated/mensagens.index'
 import { Route as AuthenticatedMensagensIdRouteImport } from './routes/_authenticated/mensagens.$id'
 import { Route as AuthenticatedPerdcompIndexRouteImport } from './routes/_authenticated/perdcomp.index'
@@ -62,6 +63,12 @@ const AuthenticatedDiagnosticoIndexRoute =
     path: '/diagnostico/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDiagnosticoIdRoute =
+  AuthenticatedDiagnosticoIdRouteImport.update({
+    id: '/diagnostico/$id',
+    path: '/diagnostico/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMensagensIndexRoute =
   AuthenticatedMensagensIndexRouteImport.update({
     id: '/mensagens/',
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/boas-vindas': typeof AuthenticatedBoasVindasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/diagnostico/$id': typeof AuthenticatedDiagnosticoIdRoute
   '/mensagens/$id': typeof AuthenticatedMensagensIdRoute
   '/perdcomp/$id': typeof AuthenticatedPerdcompIdRoute
   '/diagnostico/': typeof AuthenticatedDiagnosticoIndexRoute
@@ -106,6 +114,7 @@ export interface FileRoutesByTo {
   '/boas-vindas': typeof AuthenticatedBoasVindasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/diagnostico/$id': typeof AuthenticatedDiagnosticoIdRoute
   '/mensagens/$id': typeof AuthenticatedMensagensIdRoute
   '/perdcomp/$id': typeof AuthenticatedPerdcompIdRoute
   '/diagnostico': typeof AuthenticatedDiagnosticoIndexRoute
@@ -121,6 +130,7 @@ export interface FileRoutesById {
   '/_authenticated/boas-vindas': typeof AuthenticatedBoasVindasRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
+  '/_authenticated/diagnostico/$id': typeof AuthenticatedDiagnosticoIdRoute
   '/_authenticated/mensagens/$id': typeof AuthenticatedMensagensIdRoute
   '/_authenticated/perdcomp/$id': typeof AuthenticatedPerdcompIdRoute
   '/_authenticated/diagnostico/': typeof AuthenticatedDiagnosticoIndexRoute
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/boas-vindas'
     | '/perfil'
     | '/portal'
+    | '/diagnostico/$id'
     | '/mensagens/$id'
     | '/perdcomp/$id'
     | '/diagnostico/'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/boas-vindas'
     | '/perfil'
     | '/portal'
+    | '/diagnostico/$id'
     | '/mensagens/$id'
     | '/perdcomp/$id'
     | '/diagnostico'
@@ -163,6 +175,7 @@ export interface FileRouteTypes {
     | '/_authenticated/boas-vindas'
     | '/_authenticated/perfil'
     | '/_authenticated/portal'
+    | '/_authenticated/diagnostico/$id'
     | '/_authenticated/mensagens/$id'
     | '/_authenticated/perdcomp/$id'
     | '/_authenticated/diagnostico/'
@@ -234,6 +247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDiagnosticoIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/diagnostico/$id': {
+      id: '/_authenticated/diagnostico/$id'
+      path: '/diagnostico/$id'
+      fullPath: '/diagnostico/$id'
+      preLoaderRoute: typeof AuthenticatedDiagnosticoIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/mensagens/': {
       id: '/_authenticated/mensagens/'
       path: '/mensagens'
@@ -270,6 +290,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBoasVindasRoute: typeof AuthenticatedBoasVindasRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
+  AuthenticatedDiagnosticoIdRoute: typeof AuthenticatedDiagnosticoIdRoute
   AuthenticatedMensagensIdRoute: typeof AuthenticatedMensagensIdRoute
   AuthenticatedPerdcompIdRoute: typeof AuthenticatedPerdcompIdRoute
   AuthenticatedDiagnosticoIndexRoute: typeof AuthenticatedDiagnosticoIndexRoute
@@ -282,6 +303,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBoasVindasRoute: AuthenticatedBoasVindasRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
+  AuthenticatedDiagnosticoIdRoute: AuthenticatedDiagnosticoIdRoute,
   AuthenticatedMensagensIdRoute: AuthenticatedMensagensIdRoute,
   AuthenticatedPerdcompIdRoute: AuthenticatedPerdcompIdRoute,
   AuthenticatedDiagnosticoIndexRoute: AuthenticatedDiagnosticoIndexRoute,
