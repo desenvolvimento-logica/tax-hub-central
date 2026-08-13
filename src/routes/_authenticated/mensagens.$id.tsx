@@ -25,7 +25,12 @@ import {
   useSessao,
   type Mensagem,
 } from "@/lib/hub";
-import { ORIGEM_LEITURA_LABEL, TRIAGEM_LABEL, leituraEfetiva } from "@/lib/gob";
+import {
+  ORIGEM_LEITURA_LABEL,
+  TRIAGEM_LABEL,
+  leituraEfetiva,
+  triagemEfetiva,
+} from "@/lib/gob";
 import { ConteudoMensagem } from "@/components/conteudo-mensagem";
 import { baixarHtmlComoPdf } from "@/lib/pdf";
 import { statusVariant } from "./mensagens.index";
@@ -227,7 +232,10 @@ function DetalheMensagem() {
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">Triagem</dt>
-            <dd className="font-medium">{TRIAGEM_LABEL[mensagem.triagem] ?? mensagem.triagem}</dd>
+            <dd className="font-medium">
+              {TRIAGEM_LABEL[triagemEfetiva(mensagem, mensagem.visualizacoes)] ??
+                mensagem.triagem}
+            </dd>
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">Organização</dt>
@@ -334,7 +342,7 @@ function DetalheMensagem() {
         <div className="max-w-xs space-y-1.5">
           <Label>Classificação</Label>
           <Select
-            value={mensagem.triagem}
+            value={triagemEfetiva(mensagem, mensagem.visualizacoes)}
             onValueChange={(valor) => atualizarTriagem.mutate(valor)}
             disabled={atualizarTriagem.isPending}
           >
