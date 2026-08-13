@@ -253,12 +253,24 @@ export function totalGeral(dados: DadosLevantamento): number {
   return Object.values(dados.ambitos).reduce((soma, a) => soma + totalAmbito(a), 0);
 }
 
+/**
+ * Situação apurada pelo próprio sistema, a partir do conteúdo dos anexos.
+ * O colaborador não classifica manualmente: se há débito identificado a
+ * esfera é devedora; sem débito e com documento é regular; sem documento
+ * fica pendente de comprovação.
+ */
+export function situacaoApurada(ambito: Ambito): SituacaoAmbito {
+  if (ambito.debitos.length > 0) return "com_debitos";
+  if (ambito.documentos.length === 0) return "nao_aplicavel";
+  return "regular";
+}
+
 export function ambitoDevedor(ambito: Ambito): boolean {
-  return ambito.debitos.length > 0 || ambito.situacao === "com_debitos";
+  return situacaoApurada(ambito) === "com_debitos";
 }
 
 export function tudoRegular(dados: DadosLevantamento): boolean {
-  return Object.values(dados.ambitos).every((a) => !ambitoDevedor(a));
+  return Object.values(dados.ambitos).every((a) => situacaoApurada(a) === "regular");
 }
 
 export function temIpva(dados: DadosLevantamento): boolean {
