@@ -119,11 +119,7 @@ function DetalheMensagem() {
         observacao: observacao || null,
       });
       if (error) throw error;
-      const { error: erroStatus } = await supabase
-        .from("mensagens")
-        .update({ status_geral: statusDaAcao(tipoAcao) })
-        .eq("id", id);
-      if (erroStatus) throw erroStatus;
+
     },
     onSuccess: () => {
       setTipoAcao("");
