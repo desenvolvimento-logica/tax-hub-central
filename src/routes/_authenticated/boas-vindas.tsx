@@ -291,6 +291,52 @@ function BoasVindas() {
                   Conte conosco em cada etapa dessa jornada!
                 </p>
               </div>
+
+              <div
+                style={{
+                  marginTop: "auto",
+                  marginBottom: "8%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5%",
+                  borderTop: `2px solid ${MARCA.dourado}`,
+                  paddingTop: "5%",
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "0.72em",
+                      letterSpacing: "0.24em",
+                      textTransform: "uppercase",
+                      color: MARCA.douradoEscuro,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Seu contato no Departamento Tributário
+                  </p>
+                  <p
+                    style={{
+                      margin: "0.35em 0 0",
+                      fontSize: "1.6em",
+                      fontWeight: 700,
+                      fontFamily: '"Space Grotesk", Arial, sans-serif',
+                      opacity: colaborador.trim() ? 1 : 0.5,
+                    }}
+                  >
+                    {nomeColaborador}
+                  </p>
+                </div>
+                <div
+                  aria-hidden="true"
+                  style={{
+                    width: "22%",
+                    height: "0.5em",
+                    background: `linear-gradient(90deg, ${MARCA.douradoSuave}, ${MARCA.dourado})`,
+                  }}
+                />
+              </div>
             </div>
 
             <RodapeDocumento pagina={1} total={2} />
