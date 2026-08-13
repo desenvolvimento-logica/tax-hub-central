@@ -325,11 +325,12 @@ function contarPorSituacao(ambito: Ambito) {
 
 /** Frase de análise de um âmbito, construída a partir do que foi identificado. */
 export function analiseAmbito(titulo: string, ambito: Ambito): string {
-  if (ambito.situacao === "nao_aplicavel" && ambito.debitos.length === 0) {
-    return `${titulo}: não foi localizado documento específico para esta consulta na data do levantamento. Nada a apontar neste momento.`;
+  const situacao = situacaoApurada(ambito);
+  if (situacao === "nao_aplicavel") {
+    return `${titulo}: não foi apresentado documento oficial para esta esfera. Sem a consulta correspondente não é possível atestar a regularidade, razão pela qual a situação permanece pendente de comprovação.`;
   }
-  if (ambito.debitos.length === 0) {
-    return `${titulo}: a empresa encontra-se REGULAR — não foram identificados débitos na consulta realizada. A certidão/relatório que comprova a regularidade acompanha este levantamento.`;
+  if (situacao === "regular") {
+    return `${titulo}: situação REGULAR. A análise dos documentos apresentados não identificou débitos, parcelamentos em atraso ou pendências que impeçam a emissão de certidão nesta esfera. A comprovação acompanha este levantamento.`;
   }
 
   const contagem = contarPorSituacao(ambito);
