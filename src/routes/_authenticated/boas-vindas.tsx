@@ -252,7 +252,7 @@ function BoasVindas() {
                 style={{
                   marginTop: "7%",
                   alignSelf: "flex-start",
-                  borderRadius: "999px",
+                  borderRadius: 0,
                   background: `linear-gradient(90deg, ${MARCA.dourado}, ${MARCA.douradoSuave})`,
                   padding: "0.7em 1.6em",
                   fontSize: "1.05em",
@@ -261,6 +261,7 @@ function BoasVindas() {
               >
                 Sabemos que sua empresa é muito mais do que um <strong>CNPJ</strong>
               </div>
+
 
               <div
                 style={{
