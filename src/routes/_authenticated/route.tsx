@@ -2,14 +2,13 @@ import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } 
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Building2,
+  ClipboardList,
   FileStack,
   LayoutGrid,
   LogOut,
   MailCheck,
   Settings2,
   Sparkles,
-
-  ChartNoAxesColumn,
   UserRound,
 } from "lucide-react";
 
@@ -31,13 +30,13 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const NAV = [
-  { to: "/portal", label: "Portal", icon: LayoutGrid, gestor: false },
-  { to: "/perdcomp", label: "PERDCOMP", icon: FileStack, gestor: false },
-  { to: "/mensagens", label: "Caixa Postal e-CAC", icon: MailCheck, gestor: false },
-  { to: "/boas-vindas", label: "Boas-vindas", icon: Sparkles, gestor: false },
-  { to: "/painel", label: "Painel gerencial", icon: ChartNoAxesColumn, gestor: false },
-  { to: "/admin", label: "Administração", icon: Settings2, gestor: true },
-  { to: "/perfil", label: "Meu perfil", icon: UserRound, gestor: false },
+  { to: "/portal", label: "Portal", icon: LayoutGrid, admin: false },
+  { to: "/perdcomp", label: "PERDCOMP", icon: FileStack, admin: false },
+  { to: "/mensagens", label: "Caixa Postal e-CAC", icon: MailCheck, admin: false },
+  { to: "/diagnostico", label: "Diagnóstico Fiscal", icon: ClipboardList, admin: false },
+  { to: "/boas-vindas", label: "Comunicado boas-vindas", icon: Sparkles, admin: false },
+  { to: "/admin", label: "Administração", icon: Settings2, admin: true },
+  { to: "/perfil", label: "Meu perfil", icon: UserRound, admin: false },
 ] as const;
 
 
@@ -67,7 +66,7 @@ function AppShell() {
         </Link>
 
         <nav className="flex-1 space-y-1 px-3">
-          {NAV.filter((item) => !item.gestor || sessao?.isGestor).map((item) => {
+          {NAV.filter((item) => !item.admin || sessao?.isAdmin).map((item) => {
             const ativo = pathname === item.to || pathname.startsWith(`${item.to}/`);
             return (
               <Link
@@ -121,7 +120,7 @@ function AppShell() {
         </header>
 
         <nav className="flex gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2 md:hidden">
-          {NAV.filter((item) => !item.gestor || sessao?.isGestor).map((item) => (
+          {NAV.filter((item) => !item.admin || sessao?.isAdmin).map((item) => (
             <Link
               key={item.to}
               to={item.to}

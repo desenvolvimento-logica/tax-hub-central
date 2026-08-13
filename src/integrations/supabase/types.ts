@@ -59,6 +59,53 @@ export type Database = {
           },
         ]
       }
+      diagnosticos: {
+        Row: {
+          atualizado_em: string
+          cnpj: string | null
+          criado_em: string
+          dados: Json
+          data_levantamento: string
+          empresa: string
+          id: string
+          observacoes: string | null
+          perfil_id: string
+          responsavel: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          cnpj?: string | null
+          criado_em?: string
+          dados?: Json
+          data_levantamento?: string
+          empresa: string
+          id?: string
+          observacoes?: string | null
+          perfil_id: string
+          responsavel?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          cnpj?: string | null
+          criado_em?: string
+          dados?: Json
+          data_levantamento?: string
+          empresa?: string
+          id?: string
+          observacoes?: string | null
+          perfil_id?: string
+          responsavel?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnosticos_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mensagens: {
         Row: {
           arquivada: boolean
