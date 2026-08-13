@@ -20,18 +20,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSessao, formatarData } from "@/lib/hub";
 import {
   AMBITOS,
-  AVISO_ESTADUAL,
-  AVISO_IPVA,
-  AVISO_SINDICAL,
   SITUACAO_AMBITO_LABEL,
   SITUACAO_DEBITO_LABEL,
+  alertas,
+  analiseAmbito,
+  analiseGeral,
   dadosVazios,
   debitoVazio,
-  declaracaoVazia,
   moeda,
   pendenciasObrigatorias,
-  temDebitoEstadual,
-  temIpva,
   totalAmbito,
   totalGeral,
   tudoRegular,
@@ -41,6 +38,7 @@ import {
   type SituacaoAmbito,
   type SituacaoDebito,
 } from "@/lib/diagnostico";
+import { lerRelatorio } from "@/lib/extracao-relatorio";
 import {
   Aviso,
   CabecalhoMarca,
@@ -51,43 +49,42 @@ import {
   MARCA,
   RodapeDocumento,
 } from "@/components/documento";
-import capa from "@/assets/capa-fiscal.jpg";
 
 export const Route = createFileRoute("/_authenticated/diagnostico")({
   head: () => ({
     meta: [
-      { title: "Diagnóstico Fiscal — HUB Tributário" },
+      { title: "Levantamento de Débitos — HUB Tributário" },
       {
         name: "description",
         content:
-          "Anexe relatórios de débito e certidões municipais, estaduais e federais e gere o relatório de diagnóstico fiscal do cliente.",
+          "Anexe os relatórios municipais, estaduais e federais: o sistema identifica razão social, CNPJ e débitos e gera o levantamento para envio ao cliente.",
       },
-      { property: "og:title", content: "Diagnóstico Fiscal — HUB Tributário" },
+      { property: "og:title", content: "Levantamento de Débitos — HUB Tributário" },
       {
         property: "og:description",
-        content: "Levantamento de débitos e geração do relatório de diagnóstico fiscal ao cliente.",
+        content:
+          "Leitura automática dos relatórios de débito e geração do levantamento enviado ao cliente.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: DiagnosticoPagina,
+  component: LevantamentoPagina,
 });
 
-function hoje() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function DiagnosticoPagina() {
+function LevantamentoPagina() {
   const { data: sessao } = useSessao();
   const queryClient = useQueryClient();
 
+  // A data do documento é sempre a data da geração.
+  const dataDocumento = new Date().toISOString().slice(0, 10);
+
   const [empresa, setEmpresa] = useState("");
   const [cnpj, setCnpj] = useState("");
-  const [dataLevantamento, setDataLevantamento] = useState(hoje());
   const [observacoes, setObservacoes] = useState("");
   const [dados, setDados] = useState<DadosDiagnostico>(() => dadosVazios());
   const [enviando, setEnviando] = useState<AmbitoChave | null>(null);
+  const [leituras, setLeituras] = useState<string[]>([]);
 
   const responsavel = sessao?.perfil.nome_completo ?? "";
 
@@ -108,20 +105,20 @@ function DiagnosticoPagina() {
   const salvar = useMutation({
     mutationFn: async () => {
       if (!sessao) throw new Error("Sessão não carregada.");
-      if (!empresa.trim()) throw new Error("Informe o nome da empresa.");
+      if (!empresa.trim()) throw new Error("Nenhuma razão social identificada nos anexos.");
       const { error } = await supabase.from("diagnosticos").insert({
         perfil_id: sessao.perfil.id,
         empresa: empresa.trim(),
         cnpj: cnpj.trim() || null,
         responsavel: responsavel || null,
-        data_levantamento: dataLevantamento,
+        data_levantamento: dataDocumento,
         observacoes: observacoes.trim() || null,
         dados: dados as unknown as never,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Diagnóstico registrado no HUB.");
+      toast.success("Levantamento registrado no HUB.");
       void queryClient.invalidateQueries({ queryKey: ["diagnosticos"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -142,6 +139,52 @@ function DiagnosticoPagina() {
         const caminho = `${sessao.perfil.id}/${Date.now()}-${arquivo.name.replace(/[^\w.\-]/g, "_")}`;
         const { error } = await supabase.storage.from("diagnosticos").upload(caminho, arquivo);
         if (error) throw error;
+
+        // Leitura automática: razão social, CNPJ e débitos apontados no relatório.
+        let identificados = 0;
+        let semDebitos = false;
+        try {
+          const leitura = await lerRelatorio(arquivo);
+          identificados = leitura.debitos.length;
+          semDebitos = leitura.semDebitos;
+          if (leitura.razaoSocial) setEmpresa((atual) => atual || leitura.razaoSocial!);
+          if (leitura.cnpj) setCnpj((atual) => atual || leitura.cnpj!);
+          setDados((atual) => {
+            const ambito = atual.ambitos[chave];
+            return {
+              ...atual,
+              ambitos: {
+                ...atual.ambitos,
+                [chave]: {
+                  ...ambito,
+                  debitos: [...ambito.debitos, ...leitura.debitos],
+                  situacao:
+                    ambito.debitos.length + leitura.debitos.length > 0
+                      ? "com_debitos"
+                      : semDebitos
+                        ? "regular"
+                        : ambito.situacao,
+                },
+              },
+            };
+          });
+          setLeituras((atual) => [
+            ...atual,
+            `${arquivo.name}: ${
+              identificados > 0
+                ? `${identificados} débito(s) identificado(s)`
+                : semDebitos
+                  ? "nenhum débito (documento negativo)"
+                  : "nenhum débito reconhecido automaticamente — revise manualmente"
+            }`,
+          ]);
+        } catch {
+          setLeituras((atual) => [
+            ...atual,
+            `${arquivo.name}: não foi possível ler o conteúdo — informe os débitos manualmente.`,
+          ]);
+        }
+
         setDados((atual) => ({
           ...atual,
           ambitos: {
@@ -153,9 +196,9 @@ function DiagnosticoPagina() {
           },
         }));
       }
-      toast.success("Documento anexado.");
+      toast.success("Relatório anexado e analisado.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao anexar o documento.");
+      toast.error(e instanceof Error ? e.message : "Falha ao anexar o relatório.");
     } finally {
       setEnviando(null);
     }
@@ -164,10 +207,12 @@ function DiagnosticoPagina() {
   const pendencias = pendenciasObrigatorias(dados);
   const regular = tudoRegular(dados);
   const total = totalGeral(dados);
+  const listaAlertas = alertas(dados);
+  const aberturas = analiseGeral(dados);
 
   function imprimir() {
     if (!empresa.trim()) {
-      toast.error("Informe o nome da empresa antes de gerar o relatório.");
+      toast.error("Anexe os relatórios ou informe a razão social antes de gerar o documento.");
       return;
     }
     setTimeout(() => window.print(), 120);
@@ -179,29 +224,30 @@ function DiagnosticoPagina() {
 
       <div className="space-y-6 print:hidden">
         <header>
-          <h1 className="text-2xl font-semibold">Diagnóstico Fiscal</h1>
+          <h1 className="text-2xl font-semibold">Levantamento de Débitos</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Anexe os relatórios de débito ou certidões, informe os débitos apurados e gere o
-            relatório de diagnóstico para o cliente.
+            Anexe os relatórios de débito e certidões de cada esfera. O sistema lê os documentos,
+            identifica a razão social, o CNPJ e os débitos apontados e monta o documento para envio
+            ao cliente com a data de hoje.
           </p>
         </header>
 
         <section className="surface-panel space-y-4 p-5">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Dados da empresa
+            Identificação (preenchida pelos anexos)
           </h2>
           <div className="space-y-2">
-            <Label htmlFor="empresa">Razão social</Label>
+            <Label htmlFor="empresa">Razão social identificada</Label>
             <Input
               id="empresa"
               value={empresa}
               onChange={(e) => setEmpresa(e.target.value)}
-              placeholder="Ex.: Empresa Exemplo Ltda."
+              placeholder="Será preenchida ao anexar o primeiro relatório"
             />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="cnpj">CNPJ</Label>
+              <Label htmlFor="cnpj">CNPJ identificado</Label>
               <Input
                 id="cnpj"
                 value={cnpj}
@@ -210,24 +256,17 @@ function DiagnosticoPagina() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="data">Data do levantamento</Label>
-              <Input
-                id="data"
-                type="date"
-                value={dataLevantamento}
-                onChange={(e) => setDataLevantamento(e.target.value)}
-              />
+              <Label>Data do documento</Label>
+              <Input value={formatarData(dataDocumento, false)} readOnly disabled />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="mensagem-inicial">Mensagem inicial ao cliente</Label>
-            <Textarea
-              id="mensagem-inicial"
-              rows={4}
-              value={dados.mensagemInicial}
-              onChange={(e) => setDados((a) => ({ ...a, mensagemInicial: e.target.value }))}
-            />
-          </div>
+          {leituras.length > 0 ? (
+            <ul className="space-y-1 rounded-md bg-secondary p-3 text-xs text-muted-foreground">
+              {leituras.map((linha, i) => (
+                <li key={`${linha}-${i}`}>{linha}</li>
+              ))}
+            </ul>
+          ) : null}
         </section>
 
         {AMBITOS.map((meta) => {
@@ -245,48 +284,27 @@ function DiagnosticoPagina() {
               </div>
 
               <div className="space-y-2">
-                <Label>Situação apurada</Label>
-                <Select
-                  value={ambito.situacao}
-                  onValueChange={(v) => atualizarAmbito(meta.chave, { situacao: v as SituacaoAmbito })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(SITUACAO_AMBITO_LABEL).map(([valor, label]) => (
-                      <SelectItem key={valor} value={valor}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Documento (relatório de débitos ou certidão)</Label>
-                <div className="flex items-center gap-2">
-                  <Button asChild variant="secondary" size="sm" disabled={enviando === meta.chave}>
-                    <label className="cursor-pointer">
-                      {enviando === meta.chave ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <FileUp className="size-4" />
-                      )}
-                      Anexar arquivo
-                      <input
-                        type="file"
-                        multiple
-                        className="hidden"
-                        accept=".pdf,.png,.jpg,.jpeg,.xml,.txt"
-                        onChange={(e) => {
-                          void anexar(meta.chave, e.target.files);
-                          e.target.value = "";
-                        }}
-                      />
-                    </label>
-                  </Button>
-                </div>
+                <Label>Relatório de débitos ou certidão</Label>
+                <Button asChild variant="secondary" size="sm" disabled={enviando === meta.chave}>
+                  <label className="cursor-pointer">
+                    {enviando === meta.chave ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <FileUp className="size-4" />
+                    )}
+                    Anexar e analisar
+                    <input
+                      type="file"
+                      multiple
+                      className="hidden"
+                      accept=".pdf,.txt,.csv,.xml"
+                      onChange={(e) => {
+                        void anexar(meta.chave, e.target.files);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </Button>
                 <ul className="space-y-1">
                   {ambito.documentos.map((doc) => (
                     <li
@@ -311,9 +329,30 @@ function DiagnosticoPagina() {
                 </ul>
               </div>
 
+              <div className="space-y-2">
+                <Label>Situação apurada</Label>
+                <Select
+                  value={ambito.situacao}
+                  onValueChange={(v) =>
+                    atualizarAmbito(meta.chave, { situacao: v as SituacaoAmbito })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(SITUACAO_AMBITO_LABEL).map(([valor, label]) => (
+                      <SelectItem key={valor} value={valor}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label>Débitos identificados</Label>
+                  <Label>Débitos identificados nos anexos</Label>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -330,7 +369,7 @@ function DiagnosticoPagina() {
                 </div>
                 {ambito.debitos.length === 0 ? (
                   <p className="text-xs text-muted-foreground">
-                    Nenhum débito informado — o relatório apresentará este âmbito como regular.
+                    Nenhum débito identificado — o documento apresentará esta esfera como regular.
                   </p>
                 ) : (
                   ambito.debitos.map((debito) => (
@@ -422,7 +461,7 @@ function DiagnosticoPagina() {
               </div>
 
               <div className="space-y-2">
-                <Label>Observação deste âmbito (opcional)</Label>
+                <Label>Complemento da análise desta esfera (opcional)</Label>
                 <Textarea
                   rows={2}
                   value={ambito.observacao}
@@ -433,95 +472,9 @@ function DiagnosticoPagina() {
           );
         })}
 
-        <section className="surface-panel space-y-3 p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Declarações</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                setDados((a) => ({ ...a, declaracoes: [...a.declaracoes, declaracaoVazia()] }))
-              }
-            >
-              <Plus className="size-4" />
-              Declaração
-            </Button>
-          </div>
-          {dados.declaracoes.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
-              Opcional: informe declarações pendentes ou omissões identificadas no levantamento.
-            </p>
-          ) : (
-            dados.declaracoes.map((decl) => (
-              <div key={decl.id} className="grid gap-2 rounded-md border border-border p-3 sm:grid-cols-3">
-                <Input
-                  placeholder="Declaração (ex.: DCTF, GIA)"
-                  value={decl.tipo}
-                  onChange={(e) =>
-                    setDados((a) => ({
-                      ...a,
-                      declaracoes: a.declaracoes.map((d) =>
-                        d.id === decl.id ? { ...d, tipo: e.target.value } : d,
-                      ),
-                    }))
-                  }
-                />
-                <Input
-                  placeholder="Competência"
-                  value={decl.referencia}
-                  onChange={(e) =>
-                    setDados((a) => ({
-                      ...a,
-                      declaracoes: a.declaracoes.map((d) =>
-                        d.id === decl.id ? { ...d, referencia: e.target.value } : d,
-                      ),
-                    }))
-                  }
-                />
-                <div className="flex items-center gap-2">
-                  <Input
-                    placeholder="Situação"
-                    value={decl.situacao}
-                    onChange={(e) =>
-                      setDados((a) => ({
-                        ...a,
-                        declaracoes: a.declaracoes.map((d) =>
-                          d.id === decl.id ? { ...d, situacao: e.target.value } : d,
-                        ),
-                      }))
-                    }
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Remover declaração"
-                    onClick={() =>
-                      setDados((a) => ({
-                        ...a,
-                        declaracoes: a.declaracoes.filter((d) => d.id !== decl.id),
-                      }))
-                    }
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
-        </section>
-
         <section className="surface-panel space-y-4 p-5">
           <div className="space-y-2">
-            <Label htmlFor="mensagem-final">Mensagem final</Label>
-            <Textarea
-              id="mensagem-final"
-              rows={4}
-              value={dados.mensagemFinal}
-              onChange={(e) => setDados((a) => ({ ...a, mensagemFinal: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="obs">Observações internas (não saem no relatório)</Label>
+            <Label htmlFor="obs">Observações internas (não saem no documento)</Label>
             <Textarea
               id="obs"
               rows={2}
@@ -532,17 +485,21 @@ function DiagnosticoPagina() {
 
           {pendencias.length > 0 ? (
             <p className="rounded-md bg-warning/15 p-3 text-xs text-foreground">
-              Documentos obrigatórios ainda não anexados: {pendencias.join(", ")}.
+              Relatórios obrigatórios ainda não anexados: {pendencias.join(", ")}.
             </p>
           ) : null}
 
           <div className="flex flex-wrap gap-2">
             <Button onClick={imprimir}>
               <Printer className="size-4" />
-              Gerar relatório em PDF
+              Gerar documento em PDF
             </Button>
             <Button variant="secondary" onClick={() => salvar.mutate()} disabled={salvar.isPending}>
-              {salvar.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+              {salvar.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Save className="size-4" />
+              )}
               Salvar no HUB
             </Button>
           </div>
@@ -550,7 +507,7 @@ function DiagnosticoPagina() {
 
         {(historico ?? []).length > 0 ? (
           <section className="surface-panel p-5">
-            <h2 className="text-sm font-semibold">Últimos diagnósticos registrados</h2>
+            <h2 className="text-sm font-semibold">Últimos levantamentos registrados</h2>
             <ul className="mt-3 space-y-2 text-xs">
               {(historico ?? []).map((item) => (
                 <li key={item.id} className="flex items-center justify-between gap-2">
@@ -567,79 +524,105 @@ function DiagnosticoPagina() {
 
       {/* ============ Documento gerado ============ */}
       <div className="doc-preview">
-        {/* Capa */}
-        <section aria-label="Capa do relatório" className="doc-page">
+        {/* Capa — mesma composição do comunicado de boas-vindas */}
+        <section aria-label="Capa do documento" className="doc-page">
           <div className="doc-body">
             <div
               aria-hidden="true"
               style={{
                 position: "absolute",
                 inset: 0,
-                background: `linear-gradient(180deg, #fff 0%, ${MARCA.creme} 60%, ${MARCA.cinza} 100%)`,
+                background: `radial-gradient(120% 60% at 85% -10%, ${MARCA.douradoSuave} 0%, transparent 60%), linear-gradient(180deg, #fff 0%, ${MARCA.creme} 55%, ${MARCA.cinza} 100%)`,
               }}
             />
-            <div style={{ position: "relative", display: "flex", flexDirection: "column", flex: 1 }}>
-              <div style={{ padding: "7% 9% 0", textAlign: "center" }}>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "0.72em",
-                    letterSpacing: "0.3em",
-                    textTransform: "uppercase",
-                    color: MARCA.douradoEscuro,
-                    fontWeight: 600,
-                  }}
-                >
-                  Departamento Tributário · Lógica
-                </p>
-                <h1
-                  style={{
-                    margin: "0.6em 0 0",
-                    fontFamily: '"Space Grotesk", Arial, sans-serif',
-                    fontSize: "3em",
-                    lineHeight: 1.02,
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  DIAGNÓSTICO
-                  <br />
-                  <span style={{ color: MARCA.douradoEscuro }}>FISCAL</span>
-                </h1>
-                <p style={{ margin: "0.6em 0 0", fontSize: "1.05em", fontWeight: 500 }}>
-                  Levantamento de débitos nos portais governamentais
-                </p>
-              </div>
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: "2.4%",
+                background: `linear-gradient(180deg, ${MARCA.dourado}, ${MARCA.douradoEscuro})`,
+              }}
+            />
 
-              <div
-                style={{
-                  position: "relative",
-                  margin: "6% 9% 0",
-                  height: "34%",
-                  overflow: "hidden",
-                  borderTop: `4px solid ${MARCA.dourado}`,
-                }}
-              >
-                <img
-                  src={capa}
-                  alt="Documentos fiscais sobre a mesa"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              </div>
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                flexDirection: "column",
+                flex: 1,
+                padding: "9% 10% 0 12%",
+              }}
+            >
+              <img
+                src={LOGO_URL}
+                alt="Lógica Assessoria Contábil"
+                style={{ width: "44%", alignSelf: "center" }}
+              />
 
-              <div
+              <p
                 style={{
-                  margin: "0 9%",
-                  background: MARCA.dourado,
-                  color: MARCA.grafite,
-                  padding: "0.7em 1.2em",
-                  fontWeight: 600,
+                  marginTop: "9%",
                   fontSize: "0.95em",
+                  letterSpacing: "0.28em",
+                  textTransform: "uppercase",
+                  color: MARCA.douradoEscuro,
+                  fontWeight: 600,
                 }}
               >
-                Documento confidencial — uso exclusivo do destinatário
+                Departamento Tributário
+              </p>
+
+              <h1
+                style={{
+                  margin: "0.5em 0 0",
+                  fontFamily: '"Space Grotesk", Arial, sans-serif',
+                  fontSize: "2.9em",
+                  lineHeight: 1.05,
+                  fontWeight: 700,
+                }}
+              >
+                LEVANTAMENTO
+              </h1>
+              <p
+                style={{
+                  margin: "0.35em 0 0",
+                  fontFamily: '"Space Grotesk", Arial, sans-serif',
+                  fontSize: "2.1em",
+                  fontWeight: 500,
+                  color: MARCA.douradoEscuro,
+                }}
+              >
+                de débitos
+              </p>
+
+              <div
+                style={{
+                  marginTop: "7%",
+                  alignSelf: "flex-start",
+                  borderRadius: 0,
+                  background: `linear-gradient(90deg, ${MARCA.dourado}, ${MARCA.douradoSuave})`,
+                  padding: "0.7em 1.6em",
+                  fontSize: "1.05em",
+                  fontWeight: 600,
+                }}
+              >
+                Consulta nas esferas <strong>Municipal, Estadual e Federal</strong>
               </div>
 
-              <div style={{ padding: "5% 9% 0", textAlign: "center" }}>
+              <div
+                style={{
+                  marginTop: "6%",
+                  background: "#fff",
+                  border: `1px solid ${MARCA.cinza}`,
+                  borderTop: `3px solid ${MARCA.dourado}`,
+                  padding: "6% 6% 5%",
+                  fontSize: "1.05em",
+                  lineHeight: 1.75,
+                }}
+              >
                 <p
                   style={{
                     margin: 0,
@@ -647,6 +630,7 @@ function DiagnosticoPagina() {
                     letterSpacing: "0.24em",
                     textTransform: "uppercase",
                     color: MARCA.douradoEscuro,
+                    fontWeight: 600,
                   }}
                 >
                   Preparado para
@@ -654,43 +638,88 @@ function DiagnosticoPagina() {
                 <p
                   style={{
                     margin: "0.3em 0 0",
-                    fontSize: "1.35em",
+                    fontSize: "1.5em",
                     fontWeight: 700,
+                    fontFamily: '"Space Grotesk", Arial, sans-serif',
                     wordBreak: "break-word",
                     opacity: empresa.trim() ? 1 : 0.5,
                   }}
                 >
-                  {empresa.trim() ? empresa.trim().toUpperCase() : "NOME DO CLIENTE"}
+                  {empresa.trim() ? empresa.trim().toUpperCase() : "RAZÃO SOCIAL DO CLIENTE"}
                 </p>
-                <p style={{ margin: "0.25em 0 0", fontSize: "0.82em", color: MARCA.grafiteClaro }}>
-                  {cnpj.trim() ? `CNPJ ${cnpj.trim()} · ` : ""}
-                  Levantamento realizado em {formatarData(dataLevantamento, false)}
+                <p style={{ margin: "0.35em 0 0", fontSize: "0.9em", color: MARCA.grafiteClaro }}>
+                  {cnpj.trim() ? `CNPJ ${cnpj.trim()}` : "CNPJ a identificar"} · Documento gerado em{" "}
+                  {formatarData(dataDocumento, false)}
                 </p>
-                <img
-                  src={LOGO_URL}
-                  alt="Lógica Assessoria Contábil"
-                  style={{ width: "34%", marginTop: "5%" }}
-                />
               </div>
 
-              <RodapeDocumento pagina={1} total={2} />
+              <div
+                style={{
+                  marginTop: "auto",
+                  marginBottom: "8%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5%",
+                  borderTop: `2px solid ${MARCA.dourado}`,
+                  paddingTop: "5%",
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "0.72em",
+                      letterSpacing: "0.24em",
+                      textTransform: "uppercase",
+                      color: MARCA.douradoEscuro,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Responsável pelo levantamento
+                  </p>
+                  <p
+                    style={{
+                      margin: "0.35em 0 0",
+                      fontSize: "1.5em",
+                      fontWeight: 700,
+                      fontFamily: '"Space Grotesk", Arial, sans-serif',
+                    }}
+                  >
+                    {responsavel || "Departamento Tributário"}
+                  </p>
+                </div>
+                <div
+                  aria-hidden="true"
+                  style={{
+                    width: "22%",
+                    height: "0.5em",
+                    background: `linear-gradient(90deg, ${MARCA.douradoSuave}, ${MARCA.dourado})`,
+                  }}
+                />
+              </div>
             </div>
+
+            <RodapeDocumento pagina={1} total={2} />
           </div>
         </section>
 
         {/* Conteúdo */}
         <div className="doc-flow">
           <div className="doc-flow-body">
-            <CabecalhoMarca titulo="Diagnóstico fiscal" />
+            <CabecalhoMarca titulo="Levantamento de débitos" />
 
             <div style={{ padding: "3% 8% 0" }}>
               <section>
-                <FaixaSecao>Sobre este diagnóstico</FaixaSecao>
+                <FaixaSecao>Sobre este levantamento</FaixaSecao>
                 <p style={{ margin: "0 0 1em" }}>
-                  Olá,{" "}
-                  <strong>{empresa.trim() ? empresa.trim() : "cliente"}</strong>.
+                  Prezados, <strong>{empresa.trim() || "cliente"}</strong>.
                 </p>
-                <p style={{ margin: "0 0 1em" }}>{dados.mensagemInicial}</p>
+                <p style={{ margin: "0 0 1em" }}>
+                  Realizamos a consulta de débitos da empresa nos portais governamentais das esferas
+                  municipal, estadual e federal. Este documento apresenta, de forma organizada, o
+                  resultado apurado a partir dos relatórios e certidões obtidos, permitindo o
+                  acompanhamento das pendências e o planejamento das regularizações necessárias.
+                </p>
                 <table>
                   <tbody>
                     <tr>
@@ -703,28 +732,39 @@ function DiagnosticoPagina() {
                     </tr>
                     <tr>
                       <th>Data do levantamento</th>
-                      <td>{formatarData(dataLevantamento, false)}</td>
+                      <td>{formatarData(dataDocumento, false)}</td>
                     </tr>
                     <tr>
-                      <th>Responsável pelo levantamento</th>
+                      <th>Responsável</th>
                       <td>{responsavel || "Departamento Tributário"}</td>
                     </tr>
                     <tr>
-                      <th>Esferas consultadas</th>
-                      <td>Municipal, Estadual (inscritos e não inscritos) e Federal</td>
+                      <th>Documentos analisados</th>
+                      <td>
+                        {AMBITOS.map((meta) => dados.ambitos[meta.chave].documentos.length).reduce(
+                          (a, b) => a + b,
+                          0,
+                        )}{" "}
+                        relatório(s)/certidão(ões)
+                      </td>
                     </tr>
                   </tbody>
                 </table>
               </section>
 
               <section>
-                <FaixaSecao>Resumo por esfera</FaixaSecao>
+                <FaixaSecao>Análise do resultado apurado</FaixaSecao>
+                {aberturas.map((paragrafo) => (
+                  <p key={paragrafo} style={{ margin: "0 0 1em" }}>
+                    {paragrafo}
+                  </p>
+                ))}
                 <table>
                   <thead>
                     <tr>
                       <th>Esfera</th>
                       <th>Situação</th>
-                      <th>Débitos</th>
+                      <th>Apontamentos</th>
                       <th style={{ textAlign: "right" }}>Valor</th>
                     </tr>
                   </thead>
@@ -757,18 +797,18 @@ function DiagnosticoPagina() {
                 </table>
                 {regular ? (
                   <Aviso titulo="Empresa regular na data da consulta" tom="neutro">
-                    Não foram identificados débitos nas esferas consultadas. As certidões e os
-                    relatórios utilizados neste levantamento acompanham este diagnóstico.
+                    Não foram identificados débitos nas esferas consultadas. Os relatórios e
+                    certidões utilizados acompanham este levantamento.
                   </Aviso>
                 ) : null}
               </section>
 
               {AMBITOS.map((meta) => {
                 const ambito = dados.ambitos[meta.chave];
-                if (ambito.debitos.length === 0 && !ambito.observacao.trim()) return null;
                 return (
                   <section key={meta.chave}>
                     <FaixaSecao>{meta.titulo}</FaixaSecao>
+                    <p style={{ margin: "0 0 1em" }}>{analiseAmbito(meta.titulo, ambito)}</p>
                     {ambito.debitos.length > 0 ? (
                       <table>
                         <thead>
@@ -790,11 +830,24 @@ function DiagnosticoPagina() {
                               <td style={{ textAlign: "right" }}>{debito.valor || "—"}</td>
                             </tr>
                           ))}
+                          <tr>
+                            <td colSpan={4} style={{ fontWeight: 700 }}>
+                              Total da esfera
+                            </td>
+                            <td style={{ textAlign: "right", fontWeight: 700 }}>
+                              {moeda(totalAmbito(ambito))}
+                            </td>
+                          </tr>
                         </tbody>
                       </table>
                     ) : null}
                     {ambito.observacao.trim() ? (
                       <p style={{ margin: "0 0 1em" }}>{ambito.observacao}</p>
+                    ) : null}
+                    {ambito.documentos.length > 0 ? (
+                      <p style={{ margin: "0 0 1em", fontSize: "0.85em", color: MARCA.grafiteClaro }}>
+                        Documento(s) analisado(s): {ambito.documentos.map((d) => d.nome).join(", ")}.
+                      </p>
                     ) : null}
                   </section>
                 );
@@ -826,25 +879,26 @@ function DiagnosticoPagina() {
 
               <section>
                 <FaixaSecao>Pontos de atenção</FaixaSecao>
-                {temIpva(dados) ? <Aviso titulo="Débito de IPVA">{AVISO_IPVA}</Aviso> : null}
-                {temDebitoEstadual(dados) ? (
-                  <Aviso titulo="Certidão estadual e débitos parcelados ou suspensos">
-                    {AVISO_ESTADUAL}
+                {listaAlertas.map((alerta) => (
+                  <Aviso key={alerta.titulo} titulo={alerta.titulo} tom={alerta.tom}>
+                    {alerta.texto}
                   </Aviso>
-                ) : null}
-                <Aviso titulo="Débitos sindicais" tom="neutro">
-                  {AVISO_SINDICAL}
-                </Aviso>
+                ))}
                 <Aviso titulo="Abrangência do levantamento" tom="neutro">
-                  As informações apresentadas refletem a situação constante nos portais
-                  governamentais na data da consulta. Valores em aberto sofrem atualização de juros
-                  e multa até a data do efetivo pagamento.
+                  As informações refletem a situação constante nos portais governamentais na data
+                  desta consulta. Débitos em aberto sofrem atualização de juros e multa até a data do
+                  efetivo pagamento, sendo necessário o recálculo das guias no momento da quitação.
                 </Aviso>
               </section>
 
               <section>
                 <FaixaSecao>Estamos à disposição</FaixaSecao>
-                <p style={{ margin: "0 0 1em" }}>{dados.mensagemFinal}</p>
+                <p style={{ margin: "0 0 1em" }}>
+                  O Departamento Tributário permanece à disposição para esclarecer dúvidas, realizar
+                  o recálculo de guias, apresentar as formas de pagamento disponíveis, simular
+                  parcelamentos e acompanhar a regularização dos débitos apontados. Basta acionar o
+                  seu contato principal no departamento.
+                </p>
                 <p style={{ margin: 0, fontSize: "0.85em", color: MARCA.grafiteClaro }}>
                   {CONTATO.telefone} · {CONTATO.email}
                 </p>
