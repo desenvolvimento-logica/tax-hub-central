@@ -59,6 +59,309 @@ export type Database = {
           },
         ]
       }
+      acompanhamentos: {
+        Row: {
+          aviso_pagamento: boolean
+          aviso_pagamento_data: string | null
+          aviso_pagamento_prazo: string | null
+          compensacao_oficio: boolean
+          compensacao_oficio_opcao: string
+          compensacao_oficio_prazo: string | null
+          declaracao_id: string
+          encerrado: boolean
+          encerrado_em: string | null
+          intimacao: boolean
+          intimacao_prazo: string | null
+          observacao: string
+          ordem_servico: string
+          pagamento_confirmado: boolean
+          pagamento_confirmado_em: string | null
+          responsavel_id: string | null
+          terceiro: boolean
+          updated_at: string
+        }
+        Insert: {
+          aviso_pagamento?: boolean
+          aviso_pagamento_data?: string | null
+          aviso_pagamento_prazo?: string | null
+          compensacao_oficio?: boolean
+          compensacao_oficio_opcao?: string
+          compensacao_oficio_prazo?: string | null
+          declaracao_id: string
+          encerrado?: boolean
+          encerrado_em?: string | null
+          intimacao?: boolean
+          intimacao_prazo?: string | null
+          observacao?: string
+          ordem_servico?: string
+          pagamento_confirmado?: boolean
+          pagamento_confirmado_em?: string | null
+          responsavel_id?: string | null
+          terceiro?: boolean
+          updated_at?: string
+        }
+        Update: {
+          aviso_pagamento?: boolean
+          aviso_pagamento_data?: string | null
+          aviso_pagamento_prazo?: string | null
+          compensacao_oficio?: boolean
+          compensacao_oficio_opcao?: string
+          compensacao_oficio_prazo?: string | null
+          declaracao_id?: string
+          encerrado?: boolean
+          encerrado_em?: string | null
+          intimacao?: boolean
+          intimacao_prazo?: string | null
+          observacao?: string
+          ordem_servico?: string
+          pagamento_confirmado?: boolean
+          pagamento_confirmado_em?: string | null
+          responsavel_id?: string | null
+          terceiro?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acompanhamentos_declaracao_id_fkey"
+            columns: ["declaracao_id"]
+            isOneToOne: true
+            referencedRelation: "declaracoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acompanhamentos_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alertas: {
+        Row: {
+          criado_em: string
+          declaracao_id: string
+          id: string
+          mensagem: string
+          prioridade: string
+          resolvido: boolean
+          resolvido_em: string | null
+          resolvido_por: string | null
+          tipo: string
+        }
+        Insert: {
+          criado_em?: string
+          declaracao_id: string
+          id?: string
+          mensagem: string
+          prioridade?: string
+          resolvido?: boolean
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          tipo: string
+        }
+        Update: {
+          criado_em?: string
+          declaracao_id?: string
+          id?: string
+          mensagem?: string
+          prioridade?: string
+          resolvido?: boolean
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alertas_declaracao_id_fkey"
+            columns: ["declaracao_id"]
+            isOneToOne: false
+            referencedRelation: "declaracoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_resolvido_por_fkey"
+            columns: ["resolvido_por"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auditoria_achados: {
+        Row: {
+          codigo: string
+          criado_em: string
+          declaracao_id: string
+          descricao: string
+          id: string
+          revisado: boolean
+          revisado_em: string | null
+          revisado_por: string | null
+          severidade: string
+        }
+        Insert: {
+          codigo: string
+          criado_em?: string
+          declaracao_id: string
+          descricao: string
+          id?: string
+          revisado?: boolean
+          revisado_em?: string | null
+          revisado_por?: string | null
+          severidade?: string
+        }
+        Update: {
+          codigo?: string
+          criado_em?: string
+          declaracao_id?: string
+          descricao?: string
+          id?: string
+          revisado?: boolean
+          revisado_em?: string | null
+          revisado_por?: string | null
+          severidade?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auditoria_achados_declaracao_id_fkey"
+            columns: ["declaracao_id"]
+            isOneToOne: false
+            referencedRelation: "declaracoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auditoria_achados_revisado_por_fkey"
+            columns: ["revisado_por"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      declaracoes: {
+        Row: {
+          ajuda_situacao: string | null
+          arquivo_documento_id: string | null
+          arquivo_documento_nome: string | null
+          arquivo_recibo_id: string | null
+          arquivo_recibo_nome: string | null
+          cnpj: string | null
+          codigo_receita: string | null
+          credito_atualizado: number | null
+          dados: Json
+          data_transmissao: string | null
+          gob_id: string
+          grupo_tributo: string | null
+          id: string
+          nome: string | null
+          numero_perdcomp: string | null
+          numero_recibo: string | null
+          periodo_apuracao: string | null
+          primeira_sincronizacao: string
+          processo_administrativo: string | null
+          processo_habilitacao: string | null
+          processo_judicial: string | null
+          razao_social: string | null
+          responsavel_cpf: string | null
+          responsavel_crc: string | null
+          responsavel_email: string | null
+          responsavel_extraido_em: string | null
+          responsavel_nome: string | null
+          saldo_credito_original: number | null
+          saldo_restante: number | null
+          situacao: string | null
+          tipo_credito: string | null
+          tipo_documento: string | null
+          total_debitos: number | null
+          ultima_sincronizacao: string
+          ultimo_registro: boolean
+          updated_at: string
+          valor_total_credito: number | null
+          valor_utilizado: number | null
+        }
+        Insert: {
+          ajuda_situacao?: string | null
+          arquivo_documento_id?: string | null
+          arquivo_documento_nome?: string | null
+          arquivo_recibo_id?: string | null
+          arquivo_recibo_nome?: string | null
+          cnpj?: string | null
+          codigo_receita?: string | null
+          credito_atualizado?: number | null
+          dados?: Json
+          data_transmissao?: string | null
+          gob_id: string
+          grupo_tributo?: string | null
+          id?: string
+          nome?: string | null
+          numero_perdcomp?: string | null
+          numero_recibo?: string | null
+          periodo_apuracao?: string | null
+          primeira_sincronizacao?: string
+          processo_administrativo?: string | null
+          processo_habilitacao?: string | null
+          processo_judicial?: string | null
+          razao_social?: string | null
+          responsavel_cpf?: string | null
+          responsavel_crc?: string | null
+          responsavel_email?: string | null
+          responsavel_extraido_em?: string | null
+          responsavel_nome?: string | null
+          saldo_credito_original?: number | null
+          saldo_restante?: number | null
+          situacao?: string | null
+          tipo_credito?: string | null
+          tipo_documento?: string | null
+          total_debitos?: number | null
+          ultima_sincronizacao?: string
+          ultimo_registro?: boolean
+          updated_at?: string
+          valor_total_credito?: number | null
+          valor_utilizado?: number | null
+        }
+        Update: {
+          ajuda_situacao?: string | null
+          arquivo_documento_id?: string | null
+          arquivo_documento_nome?: string | null
+          arquivo_recibo_id?: string | null
+          arquivo_recibo_nome?: string | null
+          cnpj?: string | null
+          codigo_receita?: string | null
+          credito_atualizado?: number | null
+          dados?: Json
+          data_transmissao?: string | null
+          gob_id?: string
+          grupo_tributo?: string | null
+          id?: string
+          nome?: string | null
+          numero_perdcomp?: string | null
+          numero_recibo?: string | null
+          periodo_apuracao?: string | null
+          primeira_sincronizacao?: string
+          processo_administrativo?: string | null
+          processo_habilitacao?: string | null
+          processo_judicial?: string | null
+          razao_social?: string | null
+          responsavel_cpf?: string | null
+          responsavel_crc?: string | null
+          responsavel_email?: string | null
+          responsavel_extraido_em?: string | null
+          responsavel_nome?: string | null
+          saldo_credito_original?: number | null
+          saldo_restante?: number | null
+          situacao?: string | null
+          tipo_credito?: string | null
+          tipo_documento?: string | null
+          total_debitos?: number | null
+          ultima_sincronizacao?: string
+          ultimo_registro?: boolean
+          updated_at?: string
+          valor_total_credito?: number | null
+          valor_utilizado?: number | null
+        }
+        Relationships: []
+      }
       diagnosticos: {
         Row: {
           atualizado_em: string
@@ -100,6 +403,54 @@ export type Database = {
           {
             foreignKeyName: "diagnosticos_perfil_id_fkey"
             columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      log_alteracoes: {
+        Row: {
+          campo: string
+          criado_em: string
+          declaracao_id: string | null
+          id: string
+          usuario_id: string | null
+          usuario_nome: string
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          campo: string
+          criado_em?: string
+          declaracao_id?: string | null
+          id?: string
+          usuario_id?: string | null
+          usuario_nome?: string
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          campo?: string
+          criado_em?: string
+          declaracao_id?: string | null
+          id?: string
+          usuario_id?: string | null
+          usuario_nome?: string
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "log_alteracoes_declaracao_id_fkey"
+            columns: ["declaracao_id"]
+            isOneToOne: false
+            referencedRelation: "declaracoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "log_alteracoes_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "perfis"
             referencedColumns: ["id"]
@@ -366,6 +717,38 @@ export type Database = {
           url?: string
         }
         Relationships: []
+      }
+      status_historico: {
+        Row: {
+          declaracao_id: string
+          id: string
+          registrado_em: string
+          situacao_anterior: string | null
+          situacao_nova: string
+        }
+        Insert: {
+          declaracao_id: string
+          id?: string
+          registrado_em?: string
+          situacao_anterior?: string | null
+          situacao_nova: string
+        }
+        Update: {
+          declaracao_id?: string
+          id?: string
+          registrado_em?: string
+          situacao_anterior?: string | null
+          situacao_nova?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_historico_declaracao_id_fkey"
+            columns: ["declaracao_id"]
+            isOneToOne: false
+            referencedRelation: "declaracoes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       visualizacoes: {
         Row: {
