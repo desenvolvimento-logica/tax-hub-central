@@ -916,7 +916,7 @@ function EditorLevantamento() {
 
             <div style={{ padding: "3% 8% 0" }}>
               <section>
-                <FaixaSecao marca={M}>Dados do cliente</FaixaSecao>
+                <FaixaSecao marca={M}>1. Apresentação e identificação</FaixaSecao>
                 <table>
                   <tbody>
                     <tr>
@@ -928,11 +928,11 @@ function EditorLevantamento() {
                       <td>{cnpj.trim() || "—"}</td>
                     </tr>
                     <tr>
-                      <th>Data do levantamento</th>
+                      <th>Data-base da consulta</th>
                       <td>{formatarData(dataDocumento, false)}</td>
                     </tr>
                     <tr>
-                      <th>Responsável pela análise</th>
+                      <th>Responsável técnico</th>
                       <td>{responsavel || "Departamento Tributário"}</td>
                     </tr>
                   </tbody>
@@ -940,35 +940,88 @@ function EditorLevantamento() {
                 <p style={{ margin: "1em 0" }}>{dados.mensagemInicial}</p>
               </section>
 
-              <section>
-                <FaixaSecao marca={M}>Resumo por âmbito</FaixaSecao>
+              <section className="evitar-quebra">
+                <FaixaSecao marca={M}>2. Sumário executivo</FaixaSecao>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.8em",
+                    marginBottom: "0.9em",
+                  }}
+                >
+                  <span
+                    style={{
+                      background: conclusao.classificacao === "regular" ? M.grafite : M.dourado,
+                      color: conclusao.classificacao === "regular" ? "#fff" : M.grafite,
+                      padding: "0.35em 0.9em",
+                      fontSize: "0.8em",
+                      fontWeight: 700,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {conclusao.selo}
+                  </span>
+                  <span style={{ fontSize: "0.8em", color: M.grafiteClaro }}>
+                    Posição em {formatarData(dataDocumento, false)}
+                  </span>
+                </div>
+                <p style={{ margin: "0 0 1em" }}>{conclusao.sintese}</p>
+                <div style={{ display: "flex", gap: "2%", marginBottom: "1em" }}>
+                  {conclusao.indicadores.map((ind) => (
+                    <div
+                      key={ind.rotulo}
+                      style={{
+                        flex: 1,
+                        border: `1px solid ${M.cinza}`,
+                        borderTop: `3px solid ${M.dourado}`,
+                        padding: "0.7em 0.8em",
+                        background: "#fff",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "0.62em",
+                          letterSpacing: "0.12em",
+                          textTransform: "uppercase",
+                          color: M.grafiteClaro,
+                        }}
+                      >
+                        {ind.rotulo}
+                      </div>
+                      <div style={{ fontSize: "1.15em", fontWeight: 700, marginTop: "0.2em" }}>
+                        {ind.valor}
+                      </div>
+                    </div>
+                  ))}
+                </div>
                 {aberturas.map((paragrafo) => (
                   <p key={paragrafo} style={{ margin: "0 0 1em" }}>
                     {paragrafo}
                   </p>
                 ))}
+              </section>
+
+              <section className="evitar-quebra">
+                <FaixaSecao marca={M}>3. Panorama por esfera</FaixaSecao>
                 <table>
                   <thead>
                     <tr>
-                      <th>Âmbito</th>
-                      <th>Situação</th>
+                      <th>Esfera</th>
+                      <th>Situação apurada</th>
                       <th>Apontamentos</th>
-                      <th style={{ textAlign: "right" }}>Valor</th>
+                      <th style={{ textAlign: "right" }}>Valor posicional</th>
                     </tr>
                   </thead>
                   <tbody>
                     {AMBITOS.map((meta) => {
                       const ambito = dados.ambitos[meta.chave];
+                      const situacao = situacaoApurada(ambito);
                       return (
                         <tr key={meta.chave}>
                           <td>{meta.curto}</td>
-                          <td style={{ fontWeight: 700 }}>
-                            {ambitoDevedor(ambito)
-                              ? "Devedor"
-                              : ambito.situacao === "nao_aplicavel"
-                                ? SITUACAO_AMBITO_LABEL.nao_aplicavel
-                                : "Regular"}
-                          </td>
+                          <td style={{ fontWeight: 700 }}>{SITUACAO_AMBITO_LABEL[situacao]}</td>
                           <td>{ambito.debitos.length}</td>
                           <td style={{ textAlign: "right" }}>{moeda(totalAmbito(ambito))}</td>
                         </tr>
@@ -984,98 +1037,138 @@ function EditorLevantamento() {
                     </tr>
                   </tbody>
                 </table>
+                <p style={{ margin: "0 0 1em", fontSize: "0.85em", color: M.grafiteClaro }}>
+                  Situação apurada automaticamente pelo sistema a partir dos documentos oficiais
+                  anexados a este levantamento — sem classificação manual.
+                </p>
                 {regular ? (
                   <Aviso titulo="Empresa regular na data da consulta" tom="neutro" marca={M}>
                     Não foram identificados débitos nas esferas consultadas. As certidões que
-                    comprovam a regularidade seguem anexas a este levantamento.
+                    comprovam a regularidade seguem relacionadas ao final deste documento.
                   </Aviso>
                 ) : null}
               </section>
 
-              {AMBITOS.map((meta) => {
-                const ambito = dados.ambitos[meta.chave];
-                return (
-                  <section key={meta.chave}>
-                    <FaixaSecao marca={M}>{meta.titulo}</FaixaSecao>
-                    <p style={{ margin: "0 0 1em" }}>{analiseAmbito(meta.titulo, ambito)}</p>
-                    {ambito.debitos.length > 0 ? (
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>Tributo</th>
-                            <th>Competência/período</th>
-                            <th>Vencimento</th>
-                            <th>Situação</th>
-                            <th style={{ textAlign: "right" }}>Valor</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {ambito.debitos.map((debito) => (
-                            <tr key={debito.id}>
-                              <td>{debito.tributo || "—"}</td>
-                              <td>{debito.referencia || "—"}</td>
-                              <td>{debito.vencimento || "—"}</td>
-                              <td>{SITUACAO_DEBITO_LABEL[debito.situacao]}</td>
-                              <td style={{ textAlign: "right" }}>{debito.valor || "—"}</td>
+              <section>
+                <FaixaSecao marca={M}>4. Análise detalhada por esfera</FaixaSecao>
+                {AMBITOS.map((meta) => {
+                  const ambito = dados.ambitos[meta.chave];
+                  return (
+                    <div key={meta.chave} className="evitar-quebra" style={{ marginBottom: "1.4em" }}>
+                      <h3
+                        style={{
+                          margin: "0 0 0.4em",
+                          fontSize: "0.95em",
+                          fontWeight: 700,
+                          borderBottom: `1px solid ${M.dourado}`,
+                          paddingBottom: "0.25em",
+                        }}
+                      >
+                        4.{AMBITOS.indexOf(meta) + 1} {meta.titulo}
+                      </h3>
+                      <p style={{ margin: "0 0 0.8em" }}>{analiseAmbito(meta.titulo, ambito)}</p>
+                      {ambito.debitos.length > 0 ? (
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>Tributo</th>
+                              <th>Competência/período</th>
+                              <th>Vencimento</th>
+                              <th>Situação</th>
+                              <th style={{ textAlign: "right" }}>Valor</th>
                             </tr>
-                          ))}
-                          <tr>
-                            <td colSpan={4} style={{ fontWeight: 700 }}>
-                              Total do âmbito
-                            </td>
-                            <td style={{ textAlign: "right", fontWeight: 700 }}>
-                              {moeda(totalAmbito(ambito))}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    ) : null}
-                    {ambito.omissoes.length > 0 ? (
-                      <p style={{ margin: "0 0 1em" }}>
-                        Omissão de entrega identificada:{" "}
-                        {ambito.omissoes
-                          .map((o) =>
-                            [o.obrigacao || "declaração não identificada", o.referencia]
-                              .filter(Boolean)
-                              .join(" — "),
-                          )
-                          .join("; ")}
-                        .
+                          </thead>
+                          <tbody>
+                            {ambito.debitos.map((debito) => (
+                              <tr key={debito.id}>
+                                <td>{debito.tributo || "—"}</td>
+                                <td>{debito.referencia || "—"}</td>
+                                <td>{debito.vencimento || "—"}</td>
+                                <td>{SITUACAO_DEBITO_LABEL[debito.situacao]}</td>
+                                <td style={{ textAlign: "right" }}>{debito.valor || "—"}</td>
+                              </tr>
+                            ))}
+                            <tr>
+                              <td colSpan={4} style={{ fontWeight: 700 }}>
+                                Total da esfera
+                              </td>
+                              <td style={{ textAlign: "right", fontWeight: 700 }}>
+                                {moeda(totalAmbito(ambito))}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      ) : null}
+                      {ambito.omissoes.length > 0 ? (
+                        <p style={{ margin: "0 0 0.8em" }}>
+                          Omissão de entrega identificada:{" "}
+                          {ambito.omissoes
+                            .map((o) =>
+                              [o.obrigacao || "declaração não identificada", o.referencia]
+                                .filter(Boolean)
+                                .join(" — "),
+                            )
+                            .join("; ")}
+                          .
+                        </p>
+                      ) : null}
+                      {ambito.observacao.trim() ? (
+                        <p style={{ margin: "0 0 0.8em" }}>{ambito.observacao}</p>
+                      ) : null}
+                      <p style={{ margin: 0, fontSize: "0.82em", color: M.grafiteClaro }}>
+                        {ambito.documentos.length > 0
+                          ? `Base documental: ${ambito.documentos.map((d) => d.nome).join(", ")}.`
+                          : "Base documental: consulta oficial ainda não apresentada."}
                       </p>
-                    ) : null}
-                    {ambito.observacao.trim() ? (
-                      <p style={{ margin: "0 0 1em" }}>{ambito.observacao}</p>
-                    ) : null}
-                    {ambito.documentos.length > 0 ? (
-                      <p style={{ margin: "0 0 1em", fontSize: "0.85em", color: M.grafiteClaro }}>
-                        Documento(s) analisado(s): {ambito.documentos.map((d) => d.nome).join(", ")}.
-                      </p>
-                    ) : null}
-                  </section>
-                );
-              })}
+                    </div>
+                  );
+                })}
+              </section>
 
               <section>
-                <FaixaSecao marca={M}>Pontos de atenção</FaixaSecao>
+                <FaixaSecao marca={M}>5. Efeitos práticos e fundamentos legais</FaixaSecao>
+                {listaImpactos.length > 0 ? (
+                  listaImpactos.map((item) => (
+                    <Aviso key={item.titulo} titulo={item.titulo} tom={item.tom} marca={M}>
+                      {item.texto}
+                    </Aviso>
+                  ))
+                ) : (
+                  <p style={{ margin: "0 0 1em" }}>
+                    Não há efeitos restritivos decorrentes de débitos na data desta consulta: a
+                    empresa está apta à obtenção das certidões negativas nas esferas analisadas
+                    (arts. 205 e 206 do Código Tributário Nacional).
+                  </p>
+                )}
+              </section>
+
+              <section>
+                <FaixaSecao marca={M}>6. Pontos de atenção específicos</FaixaSecao>
                 {listaAlertas.map((alerta) => (
                   <Aviso key={alerta.titulo} titulo={alerta.titulo} tom={alerta.tom} marca={M}>
                     {alerta.texto}
                   </Aviso>
                 ))}
-                <Aviso titulo="Abrangência do levantamento" tom="neutro" marca={M}>
-                  As informações refletem a situação constante nos sistemas oficiais na data desta
-                  consulta. Débitos em aberto sofrem atualização de juros e multa até a data do
-                  efetivo pagamento, sendo necessário o recálculo das guias no momento da quitação.
-                </Aviso>
+              </section>
+
+              <section className="evitar-quebra">
+                <FaixaSecao marca={M}>7. Plano de regularização recomendado</FaixaSecao>
+                <ol style={{ margin: "0 0 1em", paddingLeft: "1.2em" }}>
+                  {plano.map((passo) => (
+                    <li key={passo} style={{ marginBottom: "0.45em" }}>
+                      {passo}
+                    </li>
+                  ))}
+                </ol>
               </section>
 
               {certidoes.length > 0 ? (
-                <section>
-                  <FaixaSecao marca={M}>Certidões anexas (comprovação de regularidade)</FaixaSecao>
+                <section className="evitar-quebra">
+                  <FaixaSecao marca={M}>8. Documentos que comprovam a regularidade</FaixaSecao>
                   <table>
                     <thead>
                       <tr>
-                        <th style={{ width: "26%" }}>Âmbito</th>
+                        <th style={{ width: "26%" }}>Esfera</th>
                         <th>Documento anexo</th>
                       </tr>
                     </thead>
@@ -1091,12 +1184,20 @@ function EditorLevantamento() {
                 </section>
               ) : null}
 
-              <section>
-                <FaixaSecao marca={M}>Encerramento</FaixaSecao>
+              <section className="evitar-quebra">
+                <FaixaSecao marca={M}>Encerramento e ressalvas</FaixaSecao>
                 <p style={{ margin: "0 0 1em" }}>{dados.mensagemFinal}</p>
+                <p style={{ margin: "0 0 1em", fontSize: "0.85em", color: M.grafiteClaro }}>
+                  Este levantamento reflete exclusivamente as informações constantes nos sistemas
+                  oficiais na data-base indicada, com base nos documentos apresentados. Valores em
+                  aberto sofrem atualização de juros e multa até o efetivo pagamento, sendo
+                  indispensável o recálculo das guias na quitação. Documento de uso exclusivo do
+                  cliente identificado.
+                </p>
                 <p style={{ margin: "1.5em 0 0", fontWeight: 700 }}>Departamento Tributário</p>
                 <p style={{ margin: "0.2em 0 0", fontSize: "0.9em", color: M.grafiteClaro }}>
-                  Lógica Assessoria Contábil · {CONTATO.telefone} · {CONTATO.email}
+                  {responsavel ? `${responsavel} · ` : ""}Lógica Assessoria Contábil ·{" "}
+                  {CONTATO.telefone} · {CONTATO.email}
                 </p>
               </section>
             </div>
