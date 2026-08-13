@@ -313,6 +313,9 @@ function EditorLevantamento() {
   const listaAlertas = alertas(dados);
   const aberturas = analiseGeral(dados);
   const certidoes = certidoesRegulares(dados);
+  const conclusao = parecer(dados);
+  const listaImpactos = impactos(dados);
+  const plano = planoAcao(dados);
 
   function imprimir() {
     if (!empresa.trim()) {
