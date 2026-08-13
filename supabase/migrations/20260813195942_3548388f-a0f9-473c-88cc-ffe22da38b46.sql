@@ -1,0 +1,1 @@
+UPDATE public.sistemas SET ativo = false WHERE url = '/diagnostico';
