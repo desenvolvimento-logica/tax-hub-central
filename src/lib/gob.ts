@@ -156,3 +156,21 @@ export const ORIGEM_LEITURA_LABEL: Record<LeituraEfetiva["origem"], string> = {
   portal: "Lida no portal",
   gob: "Lida no GOB",
 };
+
+/**
+ * Toda mensagem já visualizada (no portal ou no GOB) entra como triagem
+ * concluída — o colaborador pode reclassificar depois se necessário.
+ */
+export function triagemEfetiva(
+  mensagem: {
+    triagem: string;
+    leitor_gob?: string | null;
+    primeira_leitura_gob?: string | null;
+    data_leitura_gob?: string | null;
+    leitura_gob?: boolean | null;
+  },
+  visualizacoes: { data_visualizacao: string; perfis: { nome_completo: string } | null }[] | null,
+): string {
+  if (mensagem.triagem === "concluido") return "concluido";
+  return leituraEfetiva(mensagem, visualizacoes) ? "concluido" : mensagem.triagem;
+}
