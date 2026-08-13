@@ -21,7 +21,6 @@ import { Route as AuthenticatedDiagnosticoIdRouteImport } from './routes/_authen
 import { Route as AuthenticatedMensagensIndexRouteImport } from './routes/_authenticated/mensagens.index'
 import { Route as AuthenticatedMensagensIdRouteImport } from './routes/_authenticated/mensagens.$id'
 import { Route as AuthenticatedPerdcompIndexRouteImport } from './routes/_authenticated/perdcomp.index'
-import { Route as AuthenticatedPerdcompIdRouteImport } from './routes/_authenticated/perdcomp.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -87,11 +86,6 @@ const AuthenticatedPerdcompIndexRoute =
     path: '/perdcomp/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedPerdcompIdRoute = AuthenticatedPerdcompIdRouteImport.update({
-  id: '/perdcomp/$id',
-  path: '/perdcomp/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -102,7 +96,6 @@ export interface FileRoutesByFullPath {
   '/portal': typeof AuthenticatedPortalRoute
   '/diagnostico/$id': typeof AuthenticatedDiagnosticoIdRoute
   '/mensagens/$id': typeof AuthenticatedMensagensIdRoute
-  '/perdcomp/$id': typeof AuthenticatedPerdcompIdRoute
   '/diagnostico/': typeof AuthenticatedDiagnosticoIndexRoute
   '/mensagens/': typeof AuthenticatedMensagensIndexRoute
   '/perdcomp/': typeof AuthenticatedPerdcompIndexRoute
@@ -116,7 +109,6 @@ export interface FileRoutesByTo {
   '/portal': typeof AuthenticatedPortalRoute
   '/diagnostico/$id': typeof AuthenticatedDiagnosticoIdRoute
   '/mensagens/$id': typeof AuthenticatedMensagensIdRoute
-  '/perdcomp/$id': typeof AuthenticatedPerdcompIdRoute
   '/diagnostico': typeof AuthenticatedDiagnosticoIndexRoute
   '/mensagens': typeof AuthenticatedMensagensIndexRoute
   '/perdcomp': typeof AuthenticatedPerdcompIndexRoute
@@ -132,7 +124,6 @@ export interface FileRoutesById {
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/diagnostico/$id': typeof AuthenticatedDiagnosticoIdRoute
   '/_authenticated/mensagens/$id': typeof AuthenticatedMensagensIdRoute
-  '/_authenticated/perdcomp/$id': typeof AuthenticatedPerdcompIdRoute
   '/_authenticated/diagnostico/': typeof AuthenticatedDiagnosticoIndexRoute
   '/_authenticated/mensagens/': typeof AuthenticatedMensagensIndexRoute
   '/_authenticated/perdcomp/': typeof AuthenticatedPerdcompIndexRoute
@@ -148,7 +139,6 @@ export interface FileRouteTypes {
     | '/portal'
     | '/diagnostico/$id'
     | '/mensagens/$id'
-    | '/perdcomp/$id'
     | '/diagnostico/'
     | '/mensagens/'
     | '/perdcomp/'
@@ -162,7 +152,6 @@ export interface FileRouteTypes {
     | '/portal'
     | '/diagnostico/$id'
     | '/mensagens/$id'
-    | '/perdcomp/$id'
     | '/diagnostico'
     | '/mensagens'
     | '/perdcomp'
@@ -177,7 +166,6 @@ export interface FileRouteTypes {
     | '/_authenticated/portal'
     | '/_authenticated/diagnostico/$id'
     | '/_authenticated/mensagens/$id'
-    | '/_authenticated/perdcomp/$id'
     | '/_authenticated/diagnostico/'
     | '/_authenticated/mensagens/'
     | '/_authenticated/perdcomp/'
@@ -275,13 +263,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPerdcompIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/perdcomp/$id': {
-      id: '/_authenticated/perdcomp/$id'
-      path: '/perdcomp/$id'
-      fullPath: '/perdcomp/$id'
-      preLoaderRoute: typeof AuthenticatedPerdcompIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
   }
 }
 
@@ -292,7 +273,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
   AuthenticatedDiagnosticoIdRoute: typeof AuthenticatedDiagnosticoIdRoute
   AuthenticatedMensagensIdRoute: typeof AuthenticatedMensagensIdRoute
-  AuthenticatedPerdcompIdRoute: typeof AuthenticatedPerdcompIdRoute
   AuthenticatedDiagnosticoIndexRoute: typeof AuthenticatedDiagnosticoIndexRoute
   AuthenticatedMensagensIndexRoute: typeof AuthenticatedMensagensIndexRoute
   AuthenticatedPerdcompIndexRoute: typeof AuthenticatedPerdcompIndexRoute
@@ -305,7 +285,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
   AuthenticatedDiagnosticoIdRoute: AuthenticatedDiagnosticoIdRoute,
   AuthenticatedMensagensIdRoute: AuthenticatedMensagensIdRoute,
-  AuthenticatedPerdcompIdRoute: AuthenticatedPerdcompIdRoute,
   AuthenticatedDiagnosticoIndexRoute: AuthenticatedDiagnosticoIndexRoute,
   AuthenticatedMensagensIndexRoute: AuthenticatedMensagensIndexRoute,
   AuthenticatedPerdcompIndexRoute: AuthenticatedPerdcompIndexRoute,
