@@ -157,15 +157,15 @@ function BoasVindas() {
           >
             {textoCliente}
           </div>
+        </section>
+        <section aria-label="Página 2" className="bv-page">
+          <img src={pagina2.url} alt="Página 2 do comunicado de boas-vindas" />
           <div
             ref={refColaborador}
             className={`bv-colaborador ${colaborador.trim() ? "" : "bv-vazio"}`}
           >
             {textoColaborador}
           </div>
-        </section>
-        <section aria-label="Página 2" className="bv-page">
-          <img src={pagina2.url} alt="Página 2 do comunicado de boas-vindas" />
         </section>
       </main>
     </div>
