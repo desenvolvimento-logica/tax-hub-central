@@ -150,7 +150,7 @@ function Perdcomp() {
   const [tipoDocumento, setTipoDocumento] = useState(TODOS);
   const [pagina, setPagina] = useState(0);
   const [selecionado, setSelecionado] = useState<ItemPerdcomp | null>(null);
-  const porPagina = 50;
+  const porPagina = 25;
 
   const filtros = {
     busca,
