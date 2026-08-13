@@ -107,7 +107,21 @@ function DetalheMensagem() {
     })();
   }, [mensagem, sessao, id, queryClient]);
 
+  const atualizarTriagem = useMutation({
+    mutationFn: async (valor: string) => {
+      const { error } = await supabase.from("mensagens").update({ triagem: valor }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Triagem atualizada — a mensagem continua na Caixa Postal.");
+      queryClient.invalidateQueries({ queryKey: ["mensagem", id] });
+      queryClient.invalidateQueries({ queryKey: ["mensagens"] });
+    },
+    onError: (e: Error) => toast.error("Erro ao atualizar a triagem", { description: e.message }),
+  });
+
   const registrarAcao = useMutation({
+
     mutationFn: async () => {
       if (!sessao) throw new Error("Sessão não encontrada");
       const { error } = await supabase.from("acoes").insert({
@@ -310,7 +324,37 @@ function DetalheMensagem() {
       </header>
 
       <section className="surface-panel space-y-4 p-6">
+        <div>
+          <h2 className="text-lg font-semibold">Triagem</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Classificar a triagem apenas organiza o acompanhamento: a mensagem continua visível na
+            Caixa Postal e não é encerrada.
+          </p>
+        </div>
+        <div className="max-w-xs space-y-1.5">
+          <Label>Classificação</Label>
+          <Select
+            value={mensagem.triagem}
+            onValueChange={(valor) => atualizarTriagem.mutate(valor)}
+            disabled={atualizarTriagem.isPending}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(TRIAGEM_LABEL).map(([valor, label]) => (
+                <SelectItem key={valor} value={valor}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </section>
+
+      <section className="surface-panel space-y-4 p-6">
         <h2 className="text-lg font-semibold">Registrar tratamento</h2>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Ação</Label>
