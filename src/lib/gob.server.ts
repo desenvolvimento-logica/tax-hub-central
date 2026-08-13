@@ -109,3 +109,11 @@ export function normalizarCaixaPostal(item: RegistroGob) {
     organizacao: texto(item["accountName"]),
   };
 }
+
+export function textoGob(v: unknown): string | null {
+  return typeof v === "string" && v.trim() ? v : null;
+}
+
+export function numeroGob(v: unknown): number | null {
+  return typeof v === "number" ? v : null;
+}
