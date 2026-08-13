@@ -101,12 +101,10 @@ function DetalheMensagem() {
         .from("visualizacoes")
         .insert({ mensagem_id: id, colaborador_id: perfilId });
       if (!error) {
-        if (mensagem.status_geral === "nova") {
-          await supabase.from("mensagens").update({ status_geral: "visualizada" }).eq("id", id);
-        }
         queryClient.invalidateQueries({ queryKey: ["mensagem", id] });
         queryClient.invalidateQueries({ queryKey: ["mensagens"] });
       }
+
     })();
   }, [mensagem, sessao, id, queryClient]);
 
