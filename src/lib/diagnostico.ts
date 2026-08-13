@@ -97,13 +97,14 @@ export const MENSAGEM_FINAL_PADRAO =
   "O Departamento Tributário permanece à disposição para esclarecer dúvidas, realizar o recálculo de guias, apresentar as demais formas de pagamento disponíveis e acompanhar a regularização dos débitos apontados. Basta acionar o seu contato principal no departamento.";
 
 export const AVISO_SINDICAL =
-  "Débitos sindicais não são incluídos neste levantamento em razão das peculiaridades desse tipo de consulta. O assunto deve ser tratado diretamente com o Departamento Pessoal.";
+  "Débitos sindicais não estão incluídos no levantamento. Devido às peculiaridades desse tipo de consulta, o assunto será tratado diretamente com o Departamento Pessoal. Caso tenha interesse, ficamos à disposição.";
 
 export const AVISO_IPVA =
-  "Foi identificado débito de IPVA. Esse débito, por sua natureza, deve ser verificado e regularizado diretamente com o despachante responsável pelos veículos da empresa.";
+  "Informamos que débitos referentes à IPVA devem ser verificados diretamente com o despachante.";
 
 export const AVISO_ESTADUAL =
-  "Havendo débitos estaduais parcelados ou com exigibilidade suspensa, não é possível a emissão da certidão negativa de forma online. Nesses casos é necessário abrir processo administrativo junto à Secretaria da Fazenda, procedimento que deve ser solicitado ao escritório com antecedência.";
+  "Caso haja débitos Estaduais que constem em parcelamento ou exigibilidade suspensa, os mesmos impedem a emissão automática da Certidão Negativa de Débitos. Portanto, caso seja necessária a emissão, deverá ser solicitada através de processo administrativo.";
+
 
 export function ambitoVazio(chave: AmbitoChave): Ambito {
   return { chave, situacao: "regular", debitos: [], documentos: [], observacao: "" };
