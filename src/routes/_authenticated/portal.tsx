@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, FileStack, LayoutGrid, MailCheck, ShieldAlert, type LucideIcon } from "lucide-react";
+import { ExternalLink, FileStack, LayoutGrid, MailCheck, ShieldAlert, Sparkles, type LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
