@@ -68,7 +68,7 @@ export function normalizar(r: RegistroGob) {
     arquivo_documento_nome: texto(r["arquivoDocumentoName"]),
     arquivo_recibo_id: texto(r["arquivoReciboId"]) ?? texto(r["arquivoRecibo"]),
     arquivo_recibo_nome: texto(r["arquivoReciboName"]),
-    dados: r as Record<string, unknown>,
+    dados: r as unknown as Record<string, never>,
     ultima_sincronizacao: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
