@@ -7,6 +7,8 @@ import {
   LogOut,
   MailCheck,
   Settings2,
+  Sparkles,
+
   ChartNoAxesColumn,
   UserRound,
 } from "lucide-react";
