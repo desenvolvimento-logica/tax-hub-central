@@ -93,10 +93,13 @@ export function normalizarCaixaPostal(item: RegistroGob) {
     ativo: item["actived"] !== false && item["accountActived"] !== false,
     arquivada: item["deleted"] === true,
     importante: item["relevancia"] === true || item["inRelevancia"] === true,
-    leitura_gob: item["leitura"] === true || Boolean(leitura),
+    // Leitura feita por uma pessoa no GOB (traz nome + data/hora) => conta como lida.
+    // Leitura apenas sinalizada pelo e-CAC (dtLeitura) => permanece pendente no portal.
+    leitura_gob: Boolean(texto(item["solicitacaoUserName"]) && dataIso(item["solicitacaoDataHora"])),
     leitor_gob: texto(item["solicitacaoUserName"]) ?? texto(item["assignedUserName"]),
-    primeira_leitura_gob: leitura,
+    primeira_leitura_gob: dataIso(item["solicitacaoDataHora"]),
     data_leitura_gob: leitura,
+
     exibicao_ate: dataIso(item["dtExpiracao"]),
     triagem: (texto(item["triagem"]) ?? "nao_classificado")
       .toLowerCase()
