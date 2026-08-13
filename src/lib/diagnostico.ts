@@ -1,11 +1,15 @@
 /**
- * Módulo de Diagnóstico Fiscal — tipos, textos institucionais e regras de
- * sinalização automática usadas na geração do relatório enviado ao cliente.
+ * Módulo "Levantamento de Débitos" — tipos, textos institucionais e regras de
+ * sinalização automática aplicadas no documento enviado ao cliente.
+ *
+ * Âmbitos analisados: Federal, Estadual, Municipal e FGTS.
  */
 
 export type SituacaoAmbito = "regular" | "com_debitos" | "nao_aplicavel";
 
 export type SituacaoDebito = "aberto" | "parcelado" | "exigibilidade_suspensa" | "divida_ativa";
+
+export type StatusLevantamento = "em_andamento" | "concluido";
 
 export type Debito = {
   id: string;
@@ -16,70 +20,82 @@ export type Debito = {
   situacao: SituacaoDebito;
 };
 
-export type Declaracao = {
+/** Omissão de declaração/obrigação identificada nos relatórios. */
+export type Omissao = {
   id: string;
-  tipo: string;
+  obrigacao: string;
   referencia: string;
-  situacao: string;
 };
 
 export type Documento = {
   nome: string;
   caminho: string;
+  /** Marcado quando o arquivo é uma certidão regular a anexar ao PDF final. */
+  certidao?: boolean;
 };
+
+export type AmbitoChave = "federal" | "estadual" | "municipal" | "fgts";
 
 export type Ambito = {
   chave: AmbitoChave;
   situacao: SituacaoAmbito;
   debitos: Debito[];
   documentos: Documento[];
+  omissoes: Omissao[];
+  parcelamento: boolean;
+  exigibilidadeSuspensa: boolean;
   observacao: string;
 };
 
-export type AmbitoChave = "municipal" | "estadual_nao_inscritos" | "estadual_inscritos" | "federal";
-
-export type DadosDiagnostico = {
+export type DadosLevantamento = {
   ambitos: Record<AmbitoChave, Ambito>;
-  declaracoes: Declaracao[];
   mensagemInicial: string;
   mensagemFinal: string;
 };
 
+/** Compatibilidade com o nome anterior do tipo. */
+export type DadosDiagnostico = DadosLevantamento;
+
 export const AMBITOS: {
   chave: AmbitoChave;
   titulo: string;
+  curto: string;
   descricao: string;
   obrigatorio: boolean;
 }[] = [
   {
+    chave: "federal",
+    titulo: "Âmbito Federal",
+    curto: "Federal",
+    descricao: "Relatório de situação fiscal ou certidão da Receita Federal / PGFN.",
+    obrigatorio: true,
+  },
+  {
+    chave: "estadual",
+    titulo: "Âmbito Estadual",
+    curto: "Estadual",
+    descricao: "Relatório de débitos ou certidão da Secretaria da Fazenda estadual (inclui IPVA).",
+    obrigatorio: true,
+  },
+  {
     chave: "municipal",
     titulo: "Âmbito Municipal",
+    curto: "Municipal",
     descricao: "Relatório de débitos ou certidão emitida pela Prefeitura.",
     obrigatorio: true,
   },
   {
-    chave: "estadual_nao_inscritos",
-    titulo: "Âmbito Estadual — débitos não inscritos",
-    descricao: "Relatório de débitos ou certidão da Secretaria da Fazenda estadual.",
-    obrigatorio: true,
-  },
-  {
-    chave: "estadual_inscritos",
-    titulo: "Âmbito Estadual — débitos inscritos (Dívida Ativa)",
-    descricao: "Opcional: em alguns estados não existe documento específico para inscritos.",
-    obrigatorio: false,
-  },
-  {
-    chave: "federal",
-    titulo: "Âmbito Federal",
-    descricao: "Relatório de situação fiscal ou certidão da Receita Federal/PGFN.",
+    chave: "fgts",
+    titulo: "FGTS",
+    curto: "FGTS",
+    descricao: "Certificado de Regularidade do FGTS (CRF) ou relatório de débitos da Caixa.",
     obrigatorio: true,
   },
 ];
 
 export const SITUACAO_AMBITO_LABEL: Record<SituacaoAmbito, string> = {
-  regular: "Regular — certidão negativa/positiva com efeito de negativa",
-  com_debitos: "Débitos identificados",
+  regular: "Regular",
+  com_debitos: "Devedor",
   nao_aplicavel: "Não aplicável / documento indisponível",
 };
 
@@ -90,35 +106,54 @@ export const SITUACAO_DEBITO_LABEL: Record<SituacaoDebito, string> = {
   divida_ativa: "Inscrito em dívida ativa",
 };
 
+export const STATUS_LEVANTAMENTO_LABEL: Record<StatusLevantamento, string> = {
+  em_andamento: "Em andamento",
+  concluido: "Concluído",
+};
+
 export const MENSAGEM_INICIAL_PADRAO =
-  "Realizamos o levantamento de débitos da sua empresa nos portais governamentais nas esferas municipal, estadual e federal. O objetivo deste diagnóstico é apresentar, de forma clara e organizada, a situação fiscal identificada na data da consulta, permitindo que a empresa acompanhe suas pendências e planeje as regularizações necessárias com segurança.";
+  "Prezado cliente, conforme solicitado, realizamos o levantamento de débitos da empresa com o objetivo de identificar possíveis pendências junto aos órgãos Federal, Estadual, Municipal e FGTS. As informações apresentadas refletem a situação apurada na data indicada, considerando os dados disponíveis nos sistemas oficiais. Colocamo-nos à disposição para prestar toda a assistência necessária na regularização dos débitos, oferecendo tanto o envio dos recálculos das guias quanto a apresentação de alternativas de pagamento, conforme a necessidade da empresa.";
 
 export const MENSAGEM_FINAL_PADRAO =
   "O Departamento Tributário permanece à disposição para esclarecer dúvidas, realizar o recálculo de guias, apresentar as demais formas de pagamento disponíveis e acompanhar a regularização dos débitos apontados. Basta acionar o seu contato principal no departamento.";
 
 export const AVISO_SINDICAL =
-  "Débitos sindicais não estão incluídos no levantamento. Devido às peculiaridades desse tipo de consulta, o assunto será tratado diretamente com o Departamento Pessoal. Caso tenha interesse, ficamos à disposição.";
+  "Débitos sindicais não fazem parte da análise realizada neste levantamento. Devido às particularidades desse tipo de consulta, caso necessário, o assunto deve ser tratado diretamente com o Departamento Pessoal, que fica à disposição.";
 
 export const AVISO_IPVA =
-  "Informamos que débitos referentes à IPVA devem ser verificados diretamente com o despachante.";
+  "Foram identificados débitos de IPVA. A regularização do IPVA deve ser realizada diretamente com o despachante, não sendo executada por este escritório.";
 
 export const AVISO_ESTADUAL =
-  "Caso haja débitos Estaduais que constem em parcelamento ou exigibilidade suspensa, os mesmos impedem a emissão automática da Certidão Negativa de Débitos. Portanto, caso seja necessária a emissão, deverá ser solicitada através de processo administrativo.";
+  "Há débitos estaduais em parcelamento e/ou com exigibilidade suspensa. Nessa condição, a Certidão Negativa de Débitos não é emitida automaticamente: a emissão só é possível mediante processo administrativo, que deve ser solicitado com a devida antecedência quando houver necessidade da certidão.";
 
+export const AVISO_OMISSAO =
+  "Foram identificadas omissões de entrega de declarações/obrigações acessórias. Além de impedirem a emissão de certidões, as omissões estão sujeitas a multas por atraso na entrega, motivo pelo qual recomendamos a regularização o quanto antes.";
+
+/* ==========================================================================
+   Estruturas iniciais
+   ========================================================================== */
 
 export function ambitoVazio(chave: AmbitoChave): Ambito {
-  return { chave, situacao: "regular", debitos: [], documentos: [], observacao: "" };
+  return {
+    chave,
+    situacao: "regular",
+    debitos: [],
+    documentos: [],
+    omissoes: [],
+    parcelamento: false,
+    exigibilidadeSuspensa: false,
+    observacao: "",
+  };
 }
 
-export function dadosVazios(): DadosDiagnostico {
+export function dadosVazios(): DadosLevantamento {
   return {
     ambitos: {
-      municipal: ambitoVazio("municipal"),
-      estadual_nao_inscritos: ambitoVazio("estadual_nao_inscritos"),
-      estadual_inscritos: { ...ambitoVazio("estadual_inscritos"), situacao: "nao_aplicavel" },
       federal: ambitoVazio("federal"),
+      estadual: ambitoVazio("estadual"),
+      municipal: ambitoVazio("municipal"),
+      fgts: ambitoVazio("fgts"),
     },
-    declaracoes: [],
     mensagemInicial: MENSAGEM_INICIAL_PADRAO,
     mensagemFinal: MENSAGEM_FINAL_PADRAO,
   };
@@ -135,9 +170,67 @@ export function debitoVazio(): Debito {
   };
 }
 
-export function declaracaoVazia(): Declaracao {
-  return { id: crypto.randomUUID(), tipo: "", referencia: "", situacao: "Pendente de entrega" };
+export function omissaoVazia(): Omissao {
+  return { id: crypto.randomUUID(), obrigacao: "", referencia: "" };
 }
+
+/**
+ * Normaliza dados salvos (inclusive de levantamentos antigos, que usavam
+ * "estadual_nao_inscritos"/"estadual_inscritos" e não tinham FGTS).
+ */
+export function normalizarDados(bruto: unknown): DadosLevantamento {
+  const base = dadosVazios();
+  if (!bruto || typeof bruto !== "object") return base;
+  const entrada = bruto as Record<string, unknown>;
+  const ambitosBrutos = (entrada["ambitos"] ?? {}) as Record<string, unknown>;
+
+  function ler(chave: string): Partial<Ambito> | null {
+    const valor = ambitosBrutos[chave];
+    return valor && typeof valor === "object" ? (valor as Partial<Ambito>) : null;
+  }
+
+  function montar(chave: AmbitoChave, fontes: (Partial<Ambito> | null)[]): Ambito {
+    const vazio = ambitoVazio(chave);
+    const presentes = fontes.filter(Boolean) as Partial<Ambito>[];
+    if (presentes.length === 0) return vazio;
+    const debitos = presentes.flatMap((f) => f.debitos ?? []);
+    return {
+      ...vazio,
+      debitos,
+      documentos: presentes.flatMap((f) => f.documentos ?? []),
+      omissoes: presentes.flatMap((f) => f.omissoes ?? []),
+      parcelamento: presentes.some((f) => f.parcelamento === true),
+      exigibilidadeSuspensa: presentes.some((f) => f.exigibilidadeSuspensa === true),
+      observacao: presentes.map((f) => f.observacao ?? "").filter(Boolean).join(" "),
+      situacao: debitos.length > 0 ? "com_debitos" : (presentes[0]?.situacao ?? "regular"),
+    };
+  }
+
+  return {
+    ambitos: {
+      federal: montar("federal", [ler("federal")]),
+      estadual: montar("estadual", [
+        ler("estadual"),
+        ler("estadual_nao_inscritos"),
+        ler("estadual_inscritos"),
+      ]),
+      municipal: montar("municipal", [ler("municipal")]),
+      fgts: montar("fgts", [ler("fgts")]),
+    },
+    mensagemInicial:
+      typeof entrada["mensagemInicial"] === "string" && entrada["mensagemInicial"].trim()
+        ? (entrada["mensagemInicial"] as string)
+        : MENSAGEM_INICIAL_PADRAO,
+    mensagemFinal:
+      typeof entrada["mensagemFinal"] === "string" && entrada["mensagemFinal"].trim()
+        ? (entrada["mensagemFinal"] as string)
+        : MENSAGEM_FINAL_PADRAO,
+  };
+}
+
+/* ==========================================================================
+   Cálculos
+   ========================================================================== */
 
 export function paraNumero(valor: string): number {
   const limpo = valor
@@ -156,43 +249,60 @@ export function totalAmbito(ambito: Ambito): number {
   return ambito.debitos.reduce((soma, d) => soma + paraNumero(d.valor), 0);
 }
 
-export function temIpva(dados: DadosDiagnostico): boolean {
-  return Object.values(dados.ambitos).some((a) =>
-    a.debitos.some((d) => /ipva/i.test(d.tributo)),
-  );
-}
-
-export function temDebitoEstadual(dados: DadosDiagnostico): boolean {
-  return (["estadual_nao_inscritos", "estadual_inscritos"] as AmbitoChave[]).some(
-    (chave) => dados.ambitos[chave].debitos.length > 0,
-  );
-}
-
-export function totalGeral(dados: DadosDiagnostico): number {
+export function totalGeral(dados: DadosLevantamento): number {
   return Object.values(dados.ambitos).reduce((soma, a) => soma + totalAmbito(a), 0);
 }
 
-export function tudoRegular(dados: DadosDiagnostico): boolean {
-  return Object.values(dados.ambitos).every((a) => a.debitos.length === 0);
+export function ambitoDevedor(ambito: Ambito): boolean {
+  return ambito.debitos.length > 0 || ambito.situacao === "com_debitos";
 }
 
-export function pendenciasObrigatorias(dados: DadosDiagnostico): string[] {
+export function tudoRegular(dados: DadosLevantamento): boolean {
+  return Object.values(dados.ambitos).every((a) => !ambitoDevedor(a));
+}
+
+export function temIpva(dados: DadosLevantamento): boolean {
+  return Object.values(dados.ambitos).some((a) => a.debitos.some((d) => /ipva/i.test(d.tributo)));
+}
+
+export function temOmissao(dados: DadosLevantamento): boolean {
+  return Object.values(dados.ambitos).some((a) => a.omissoes.length > 0);
+}
+
+export function omissoesLista(dados: DadosLevantamento): { ambito: string; omissao: Omissao }[] {
+  return AMBITOS.flatMap((meta) =>
+    dados.ambitos[meta.chave].omissoes.map((omissao) => ({ ambito: meta.curto, omissao })),
+  );
+}
+
+export function estadualParceladoOuSuspenso(dados: DadosLevantamento): boolean {
+  const estadual = dados.ambitos.estadual;
+  return (
+    estadual.parcelamento ||
+    estadual.exigibilidadeSuspensa ||
+    estadual.debitos.some(
+      (d) => d.situacao === "parcelado" || d.situacao === "exigibilidade_suspensa",
+    )
+  );
+}
+
+export function certidoesRegulares(dados: DadosLevantamento): { ambito: string; nome: string }[] {
+  return AMBITOS.flatMap((meta) => {
+    const ambito = dados.ambitos[meta.chave];
+    if (ambitoDevedor(ambito)) return [];
+    return ambito.documentos.map((doc) => ({ ambito: meta.curto, nome: doc.nome }));
+  });
+}
+
+export function pendenciasObrigatorias(dados: DadosLevantamento): string[] {
   return AMBITOS.filter((a) => a.obrigatorio)
     .filter((a) => dados.ambitos[a.chave].documentos.length === 0)
     .map((a) => a.titulo);
 }
 
 /* ==========================================================================
-   Análise dinâmica — o texto do relatório nasce dos documentos anexados.
+   Texto dinâmico — nasce do conteúdo dos anexos
    ========================================================================== */
-
-export function estadualParceladoOuSuspenso(dados: DadosDiagnostico): boolean {
-  return (["estadual_nao_inscritos", "estadual_inscritos"] as AmbitoChave[]).some((chave) =>
-    dados.ambitos[chave].debitos.some(
-      (d) => d.situacao === "parcelado" || d.situacao === "exigibilidade_suspensa",
-    ),
-  );
-}
 
 function contarPorSituacao(ambito: Ambito) {
   return ambito.debitos.reduce<Record<SituacaoDebito, number>>(
@@ -207,7 +317,7 @@ export function analiseAmbito(titulo: string, ambito: Ambito): string {
     return `${titulo}: não foi localizado documento específico para esta consulta na data do levantamento. Nada a apontar neste momento.`;
   }
   if (ambito.debitos.length === 0) {
-    return `${titulo}: não foram identificados débitos na consulta realizada. A empresa encontra-se regular nesta esfera na data deste levantamento.`;
+    return `${titulo}: a empresa encontra-se REGULAR — não foram identificados débitos na consulta realizada. A certidão/relatório que comprova a regularidade acompanha este levantamento.`;
   }
 
   const contagem = contarPorSituacao(ambito);
@@ -218,46 +328,62 @@ export function analiseAmbito(titulo: string, ambito: Ambito): string {
     trechos.push(`${contagem.exigibilidade_suspensa} com exigibilidade suspensa`);
   if (contagem.divida_ativa) trechos.push(`${contagem.divida_ativa} inscrito(s) em dívida ativa`);
 
-  const quantidade = ambito.debitos.length;
-  return `${titulo}: foram identificados ${quantidade} apontamento(s), totalizando ${moeda(
+  return `${titulo}: a empresa consta como DEVEDORA — foram identificados ${ambito.debitos.length} apontamento(s), totalizando ${moeda(
     totalAmbito(ambito),
   )}${trechos.length ? ` (${trechos.join(", ")})` : ""}. O detalhamento consta na tabela desta esfera.`;
 }
 
 /** Parágrafos de abertura da análise, também dependentes dos dados lidos. */
-export function analiseGeral(dados: DadosDiagnostico): string[] {
+export function analiseGeral(dados: DadosLevantamento): string[] {
   const total = totalGeral(dados);
-  const comDebito = AMBITOS.filter((a) => dados.ambitos[a.chave].debitos.length > 0);
+  const comDebito = AMBITOS.filter((a) => ambitoDevedor(dados.ambitos[a.chave]));
 
   if (comDebito.length === 0) {
     return [
-      "A partir dos relatórios e certidões anexados a este levantamento, não foram identificados débitos em nome da empresa nas esferas consultadas.",
-      "Recomendamos manter o acompanhamento periódico, uma vez que o resultado reflete exclusivamente a situação constante nos portais governamentais na data desta consulta.",
+      "A partir dos relatórios e certidões anexados a este levantamento, não foram identificados débitos em nome da empresa nas esferas consultadas (Federal, Estadual, Municipal e FGTS).",
+      "Recomendamos manter o acompanhamento periódico, uma vez que o resultado reflete exclusivamente a situação constante nos sistemas oficiais na data desta consulta.",
     ];
   }
 
   return [
     `A análise dos documentos anexados identificou apontamentos em ${comDebito.length} das esferas consultadas (${comDebito
-      .map((a) => a.titulo.replace("Âmbito ", ""))
+      .map((a) => a.curto)
       .join(", ")}), somando ${moeda(total)} na data desta consulta.`,
     "Os valores em aberto sofrem atualização de juros e multa até a data do efetivo pagamento, motivo pelo qual as guias devem ser recalculadas no momento da quitação.",
-    "Nas seções seguintes apresentamos a análise de cada esfera, o detalhamento dos débitos e os pontos que exigem atenção específica.",
+    "Nas seções seguintes apresentamos a situação de cada esfera, o detalhamento dos débitos identificados e os pontos que exigem atenção específica.",
   ];
 }
 
 export type Alerta = { titulo: string; texto: string; tom: "atencao" | "neutro" };
 
 /** Regras fixas de sinalização, aplicadas conforme o conteúdo dos anexos. */
-export function alertas(dados: DadosDiagnostico): Alerta[] {
+export function alertas(dados: DadosLevantamento): Alerta[] {
   const lista: Alerta[] = [];
+
+  if (temOmissao(dados)) {
+    const origens = omissoesLista(dados)
+      .map(({ ambito, omissao }) =>
+        [omissao.obrigacao || "Declaração não identificada", omissao.referencia, `(${ambito})`]
+          .filter(Boolean)
+          .join(" "),
+      )
+      .join("; ");
+    lista.push({
+      titulo: "Omissão de entrega de declaração",
+      texto: `${AVISO_OMISSAO} Origem da omissão: ${origens}.`,
+      tom: "atencao",
+    });
+  }
+
   if (temIpva(dados)) lista.push({ titulo: "Débitos de IPVA", texto: AVISO_IPVA, tom: "atencao" });
+
   if (estadualParceladoOuSuspenso(dados))
     lista.push({
-      titulo: "Certidão Negativa de Débitos Estadual",
+      titulo: "Certidão Negativa de Débitos — âmbito estadual",
       texto: AVISO_ESTADUAL,
       tom: "atencao",
     });
+
   lista.push({ titulo: "Débitos sindicais", texto: AVISO_SINDICAL, tom: "neutro" });
   return lista;
 }
-
