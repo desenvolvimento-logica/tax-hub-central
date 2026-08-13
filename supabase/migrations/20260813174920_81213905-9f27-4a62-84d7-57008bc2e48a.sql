@@ -1,0 +1,1 @@
+UPDATE public.sistemas SET nome = 'Comunicado de boas-vindas' WHERE url = '/boas-vindas';
