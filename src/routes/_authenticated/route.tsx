@@ -7,6 +7,8 @@ import {
   LogOut,
   MailCheck,
   Settings2,
+  Sparkles,
+
   ChartNoAxesColumn,
   UserRound,
 } from "lucide-react";
@@ -32,10 +34,12 @@ const NAV = [
   { to: "/portal", label: "Portal", icon: LayoutGrid, gestor: false },
   { to: "/perdcomp", label: "PERDCOMP", icon: FileStack, gestor: false },
   { to: "/mensagens", label: "Caixa Postal e-CAC", icon: MailCheck, gestor: false },
+  { to: "/boas-vindas", label: "Boas-vindas", icon: Sparkles, gestor: false },
   { to: "/painel", label: "Painel gerencial", icon: ChartNoAxesColumn, gestor: false },
   { to: "/admin", label: "Administração", icon: Settings2, gestor: true },
   { to: "/perfil", label: "Meu perfil", icon: UserRound, gestor: false },
 ] as const;
+
 
 function AppShell() {
   const { data: sessao } = useSessao();
