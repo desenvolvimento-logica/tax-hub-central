@@ -49,6 +49,19 @@ export function EstilosDocumento() {
         position: absolute; inset: 0; display: flex; flex-direction: column;
         font-size: 1.62cqw;
       }
+      .doc-flow {
+        width: 100%;
+        background: #fff;
+        color: ${MARCA.grafite};
+        font-family: "DM Sans", Arial, Helvetica, sans-serif;
+        container-type: inline-size;
+        box-shadow: 0 18px 48px -24px rgba(15, 23, 42, 0.45);
+      }
+      .doc-flow .doc-flow-body { font-size: 1.62cqw; line-height: 1.65; padding: 0 0 4%; }
+      .doc-flow table { width: 100%; border-collapse: collapse; margin: 0 0 1em; font-size: 0.86em; }
+      .doc-flow th, .doc-flow td { border: 1px solid ${MARCA.cinza}; padding: 0.45em 0.6em; text-align: left; }
+      .doc-flow thead th { background: ${MARCA.douradoSuave}; }
+      .doc-flow section, .doc-flow table, .doc-flow .evitar-quebra { break-inside: avoid; page-break-inside: avoid; }
       .doc-rodape {
         margin-top: auto;
         border-top: 2px solid ${MARCA.dourado};
@@ -72,6 +85,7 @@ export function EstilosDocumento() {
           box-shadow: none; page-break-after: always; break-after: page;
         }
         .doc-page:last-child { page-break-after: auto; break-after: auto; }
+        .doc-flow { width: 210mm; box-shadow: none; }
       }
     `}</style>
   );
