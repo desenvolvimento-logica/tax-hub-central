@@ -27,7 +27,9 @@ const ICONES: Record<string, LucideIcon> = {
   FileStack,
   MailCheck,
   LayoutGrid,
+  Sparkles,
 };
+
 
 function Portal() {
   const { data: sessao } = useSessao();
