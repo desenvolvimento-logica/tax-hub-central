@@ -22,7 +22,6 @@ import {
   SUB_TIPO_LABEL,
   TIPO_ACAO_LABEL,
   formatarData,
-  statusDaAcao,
   useSessao,
   type Mensagem,
 } from "@/lib/hub";
@@ -101,12 +100,10 @@ function DetalheMensagem() {
         .from("visualizacoes")
         .insert({ mensagem_id: id, colaborador_id: perfilId });
       if (!error) {
-        if (mensagem.status_geral === "nova") {
-          await supabase.from("mensagens").update({ status_geral: "visualizada" }).eq("id", id);
-        }
         queryClient.invalidateQueries({ queryKey: ["mensagem", id] });
         queryClient.invalidateQueries({ queryKey: ["mensagens"] });
       }
+
     })();
   }, [mensagem, sessao, id, queryClient]);
 
@@ -121,11 +118,7 @@ function DetalheMensagem() {
         observacao: observacao || null,
       });
       if (error) throw error;
-      const { error: erroStatus } = await supabase
-        .from("mensagens")
-        .update({ status_geral: statusDaAcao(tipoAcao) })
-        .eq("id", id);
-      if (erroStatus) throw erroStatus;
+
     },
     onSuccess: () => {
       setTipoAcao("");
