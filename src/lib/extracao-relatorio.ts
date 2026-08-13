@@ -5,8 +5,8 @@
  * Roda apenas no navegador: o pdf.js é importado dinamicamente.
  */
 
-import type { Debito, SituacaoDebito } from "./diagnostico";
-import { debitoVazio, paraNumero } from "./diagnostico";
+import type { Debito, Omissao, SituacaoDebito } from "./diagnostico";
+import { debitoVazio, omissaoVazia, paraNumero } from "./diagnostico";
 
 export type LeituraRelatorio = {
   arquivo: string;
@@ -14,6 +14,10 @@ export type LeituraRelatorio = {
   cnpj: string | null;
   debitos: Debito[];
   semDebitos: boolean;
+  parcelamento: boolean;
+  exigibilidadeSuspensa: boolean;
+  ipva: boolean;
+  omissoes: Omissao[];
   texto: string;
 };
 
@@ -147,6 +151,42 @@ function tributoDaLinha(linha: string): string {
   return limpo || "Débito identificado";
 }
 
+const OBRIGACOES = [
+  "DCTF",
+  "DCTFWeb",
+  "EFD-Contribuições",
+  "EFD Contribuições",
+  "ECF",
+  "ECD",
+  "GIA",
+  "SPED Fiscal",
+  "EFD ICMS/IPI",
+  "DEFIS",
+  "PGDAS",
+  "DIRF",
+  "eSocial",
+  "GFIP",
+  "DASN",
+  "DMED",
+  "DIMOB",
+];
+
+/** Localiza omissões de entrega de declarações citadas no relatório. */
+function identificarOmissoes(linhas: string[]): Omissao[] {
+  const encontradas: Omissao[] = [];
+  for (const linha of linhas) {
+    if (!/omiss|omitid|falta\s+de\s+entrega|n[ãa]o\s+entregue|sem\s+entrega/i.test(linha)) continue;
+    const maiusculo = linha.toUpperCase();
+    const obrigacao =
+      OBRIGACOES.find((o) => maiusculo.includes(o.toUpperCase())) ??
+      linha.replace(/\s{2,}/g, " ").slice(0, 70).trim();
+    const referencia = linha.match(RE_COMPETENCIA)?.[0] ?? "";
+    if (encontradas.some((o) => o.obrigacao === obrigacao && o.referencia === referencia)) continue;
+    encontradas.push({ ...omissaoVazia(), obrigacao, referencia });
+  }
+  return encontradas.slice(0, 30);
+}
+
 /** Interpreta o texto de um relatório e devolve os dados reconhecidos. */
 export function interpretarRelatorio(arquivo: string, texto: string): LeituraRelatorio {
   const linhas = texto
@@ -176,12 +216,23 @@ export function interpretarRelatorio(arquivo: string, texto: string): LeituraRel
     });
   }
 
+  const parcelamento = /parcelad|parcelamento/i.test(texto);
+  const exigibilidadeSuspensa = /exigibilidade\s+suspensa|suspens[ãa]o\s+da\s+exigibilidade/i.test(
+    texto,
+  );
+  const ipva = /\bipva\b/i.test(texto);
+  const omissoes = identificarOmissoes(linhas);
+
   return {
     arquivo,
     razaoSocial: identificarRazaoSocial(linhas),
     cnpj: cnpjBruto ? formatarCnpj(cnpjBruto) : null,
     debitos: semDebitos && debitos.length === 0 ? [] : debitos.slice(0, 60),
     semDebitos: semDebitos && debitos.length === 0,
+    parcelamento,
+    exigibilidadeSuspensa,
+    ipva,
+    omissoes,
     texto,
   };
 }
