@@ -94,6 +94,7 @@ export function normalizarCaixaPostal(item: RegistroGob) {
     arquivada: item["deleted"] === true,
     importante: item["relevancia"] === true || item["inRelevancia"] === true,
     leitura_gob: item["leitura"] === true || Boolean(leitura),
+    leitor_gob: texto(item["solicitacaoUserName"]) ?? texto(item["assignedUserName"]),
     primeira_leitura_gob: leitura,
     data_leitura_gob: leitura,
     exibicao_ate: dataIso(item["dtExpiracao"]),

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Eye, MailCheck, MailX } from "lucide-react";
+import { ArrowLeft, Download, Eye, MailCheck, MailX } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,9 @@ import {
   useSessao,
   type Mensagem,
 } from "@/lib/hub";
-import { TRIAGEM_LABEL, primeiraLeituraHumana } from "@/lib/gob";
+import { ORIGEM_LEITURA_LABEL, TRIAGEM_LABEL, leituraEfetiva } from "@/lib/gob";
+import { ConteudoMensagem } from "@/components/conteudo-mensagem";
+import { baixarHtmlComoPdf } from "@/lib/pdf";
 import { statusVariant } from "./mensagens.index";
 
 export const Route = createFileRoute("/_authenticated/mensagens/$id")({
@@ -65,6 +67,8 @@ function DetalheMensagem() {
   const queryClient = useQueryClient();
   const { data: sessao } = useSessao();
 
+  const conteudoRef = useRef<HTMLDivElement>(null);
+  const [gerandoPdf, setGerandoPdf] = useState(false);
   const [tipoAcao, setTipoAcao] = useState("");
   const [subTipo, setSubTipo] = useState("");
   const [observacao, setObservacao] = useState("");
@@ -146,7 +150,7 @@ function DetalheMensagem() {
     );
   }
 
-  const leituraHumana = primeiraLeituraHumana(mensagem.visualizacoes);
+  const leitura = leituraEfetiva(mensagem, mensagem.visualizacoes);
 
   const historico = [
     ...(mensagem.visualizacoes ?? []).map((v) => ({
@@ -241,27 +245,67 @@ function DetalheMensagem() {
           <div className="sm:col-span-3">
             <dt className="text-xs text-muted-foreground">Primeira leitura</dt>
             <dd className="font-medium">
-              {leituraHumana ? (
-                <span className="inline-flex items-center gap-1 text-success">
-                  <MailCheck className="size-4" /> {leituraHumana.quem} ·{" "}
-                  {formatarData(leituraHumana.quando)}
+              {leitura ? (
+                <span className="inline-flex flex-wrap items-center gap-2 text-success">
+                  <span className="inline-flex items-center gap-1">
+                    <MailCheck className="size-4" /> {leitura.quem} · {formatarData(leitura.quando)}
+                  </span>
+                  <Badge variant={leitura.origem === "portal" ? "default" : "secondary"}>
+                    {ORIGEM_LEITURA_LABEL[leitura.origem]}
+                  </Badge>
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 text-warning">
-                  <MailX className="size-4" /> Pendente — aguardando visualização de um colaborador
+                  <MailX className="size-4" /> Pendente — aguardando leitura de um colaborador no
+                  portal
                 </span>
               )}
               {mensagem.primeira_leitura_gob && (
                 <span className="ml-2 text-xs text-muted-foreground">
-                  (GOB informou leitura no e-CAC em {formatarData(mensagem.primeira_leitura_gob)})
+                  (e-CAC/GOB sinalizou leitura em {formatarData(mensagem.primeira_leitura_gob)}
+                  {mensagem.leitor_gob ? ` por ${mensagem.leitor_gob}` : ""})
                 </span>
               )}
             </dd>
           </div>
         </dl>
 
-        <div className="rounded-md bg-muted/60 p-4 text-sm leading-relaxed whitespace-pre-line">
-          {mensagem.conteudo}
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-muted-foreground">Conteúdo da mensagem</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={gerandoPdf || !mensagem.conteudo.trim()}
+            onClick={async () => {
+              if (!conteudoRef.current) return;
+              setGerandoPdf(true);
+              try {
+                await baixarHtmlComoPdf(
+                  conteudoRef.current,
+                  `mensagem-${mensagem.protocolo}.pdf`,
+                );
+              } catch (e) {
+                toast.error("Não foi possível gerar o PDF", {
+                  description: e instanceof Error ? e.message : undefined,
+                });
+              } finally {
+                setGerandoPdf(false);
+              }
+            }}
+          >
+            <Download className="size-4" />
+            {gerandoPdf ? "Gerando…" : "Baixar PDF"}
+          </Button>
+        </div>
+
+        <div ref={conteudoRef} className="rounded-md bg-muted/60 p-4">
+          <p className="text-xs text-muted-foreground">{mensagem.protocolo}</p>
+          <h3 className="mb-1 text-base font-semibold">{mensagem.assunto}</h3>
+          <p className="mb-3 text-xs text-muted-foreground">
+            {mensagem.nome_contribuinte} · {mensagem.cnpj_contribuinte} ·{" "}
+            {mensagem.remetente ?? mensagem.orgao} · {formatarData(mensagem.data_recebimento)}
+          </p>
+          <ConteudoMensagem html={mensagem.conteudo} />
         </div>
 
         <p className="inline-flex items-center gap-1 text-xs text-muted-foreground">

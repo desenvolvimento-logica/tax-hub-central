@@ -32,7 +32,7 @@ import {
   TAGS_GOB,
   TRIAGEM_LABEL,
   dentroDoPeriodo,
-  primeiraLeituraHumana,
+  leituraEfetiva,
 } from "@/lib/gob";
 import { sincronizarGob } from "@/lib/gob.functions";
 
@@ -158,7 +158,7 @@ function ListaMensagens() {
 
   const filtradas = useMemo(() => {
     return (mensagens ?? []).filter((m) => {
-      const leituraHumana = primeiraLeituraHumana(m.visualizacoes);
+      const leituraHumana = leituraEfetiva(m, m.visualizacoes);
       if (tipo !== TODOS && (m.tipo ?? "") !== tipo) return false;
       if (ni && !`${m.ni ?? ""} ${m.cnpj_contribuinte} ${m.nome_contribuinte}`.toLowerCase().includes(ni.toLowerCase()))
         return false;
@@ -519,7 +519,7 @@ function ListaMensagens() {
               </TableRow>
             )}
             {filtradas.map((m) => {
-              const leitura = primeiraLeituraHumana(m.visualizacoes);
+              const leitura = leituraEfetiva(m, m.visualizacoes);
               return (
                 <TableRow key={m.id}>
                   <TableCell className="text-sm">
@@ -555,7 +555,8 @@ function ListaMensagens() {
                           <Eye className="size-3.5" /> {leitura.quem}
                         </span>
                         <span className="text-muted-foreground">
-                          {formatarData(leitura.quando)}
+                          {formatarData(leitura.quando)} ·{" "}
+                          {leitura.origem === "portal" ? "portal" : "GOB"}
                         </span>
                       </span>
                     ) : (
@@ -565,7 +566,7 @@ function ListaMensagens() {
                         </span>
                         {m.primeira_leitura_gob && (
                           <span className="text-muted-foreground">
-                            GOB: {formatarData(m.primeira_leitura_gob)}
+                            e-CAC: {formatarData(m.primeira_leitura_gob)}
                           </span>
                         )}
                       </span>

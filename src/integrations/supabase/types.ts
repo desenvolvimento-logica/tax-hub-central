@@ -74,6 +74,7 @@ export type Database = {
           gob_id: string | null
           id: string
           importante: boolean
+          leitor_gob: string | null
           leitura_gob: boolean
           ni: string | null
           nome_contribuinte: string
@@ -101,6 +102,7 @@ export type Database = {
           gob_id?: string | null
           id?: string
           importante?: boolean
+          leitor_gob?: string | null
           leitura_gob?: boolean
           ni?: string | null
           nome_contribuinte: string
@@ -128,6 +130,7 @@ export type Database = {
           gob_id?: string | null
           id?: string
           importante?: boolean
+          leitor_gob?: string | null
           leitura_gob?: boolean
           ni?: string | null
           nome_contribuinte?: string
