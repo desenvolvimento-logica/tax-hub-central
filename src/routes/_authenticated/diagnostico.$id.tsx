@@ -486,46 +486,27 @@ function EditorLevantamento() {
                 </ul>
               </div>
 
-              <div className="space-y-2">
-                <Label>Situação apurada</Label>
-                <Select
-                  value={ambito.situacao}
-                  onValueChange={(v) =>
-                    atualizarAmbito(meta.chave, { situacao: v as SituacaoAmbito })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(SITUACAO_AMBITO_LABEL).map(([valor, label]) => (
-                      <SelectItem key={valor} value={valor}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-2">
-                <label className="flex items-center gap-2 text-xs">
-                  <Checkbox
-                    checked={ambito.parcelamento}
-                    onCheckedChange={(v) =>
-                      atualizarAmbito(meta.chave, { parcelamento: v === true })
-                    }
-                  />
-                  Existe parcelamento
-                </label>
-                <label className="flex items-center gap-2 text-xs">
-                  <Checkbox
-                    checked={ambito.exigibilidadeSuspensa}
-                    onCheckedChange={(v) =>
-                      atualizarAmbito(meta.chave, { exigibilidadeSuspensa: v === true })
-                    }
-                  />
-                  Exigibilidade suspensa
-                </label>
+              <div className="rounded-md bg-secondary p-3 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">
+                  Situação apurada pelo sistema: {SITUACAO_AMBITO_LABEL[situacaoApurada(ambito)]}
+                </span>
+                <p className="mt-1">
+                  A classificação é definida automaticamente pelos documentos anexados (débitos
+                  reconhecidos, parcelamentos, exigibilidade suspensa e omissões). Corrija abaixo
+                  apenas os dados extraídos, se necessário.
+                </p>
+                {ambito.parcelamento || ambito.exigibilidadeSuspensa ? (
+                  <p className="mt-1">
+                    Identificado no documento:{" "}
+                    {[
+                      ambito.parcelamento ? "parcelamento" : null,
+                      ambito.exigibilidadeSuspensa ? "exigibilidade suspensa" : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    .
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-3">
