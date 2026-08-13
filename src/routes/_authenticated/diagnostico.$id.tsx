@@ -16,7 +16,6 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,11 +54,11 @@ import {
   type Ambito,
   type AmbitoChave,
   type DadosLevantamento,
-  type SituacaoAmbito,
   type SituacaoDebito,
   type StatusLevantamento,
 } from "@/lib/diagnostico";
 import { lerRelatorio } from "@/lib/extracao-relatorio";
+import capa from "@/assets/capa-levantamento.jpg";
 import {
   Aviso,
   CabecalhoMarca,
