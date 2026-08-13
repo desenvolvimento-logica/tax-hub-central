@@ -14,9 +14,10 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedBoasVindasRouteImport } from './routes/_authenticated/boas-vindas'
-import { Route as AuthenticatedDiagnosticoRouteImport } from './routes/_authenticated/diagnostico'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
+import { Route as AuthenticatedDiagnosticoIndexRouteImport } from './routes/_authenticated/diagnostico.index'
+import { Route as AuthenticatedDiagnosticoIdRouteImport } from './routes/_authenticated/diagnostico.$id'
 import { Route as AuthenticatedMensagensIndexRouteImport } from './routes/_authenticated/mensagens.index'
 import { Route as AuthenticatedMensagensIdRouteImport } from './routes/_authenticated/mensagens.$id'
 import { Route as AuthenticatedPerdcompIndexRouteImport } from './routes/_authenticated/perdcomp.index'
@@ -46,12 +47,6 @@ const AuthenticatedBoasVindasRoute = AuthenticatedBoasVindasRouteImport.update({
   path: '/boas-vindas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDiagnosticoRoute =
-  AuthenticatedDiagnosticoRouteImport.update({
-    id: '/diagnostico',
-    path: '/diagnostico',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -62,6 +57,18 @@ const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   path: '/portal',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDiagnosticoIndexRoute =
+  AuthenticatedDiagnosticoIndexRouteImport.update({
+    id: '/diagnostico/',
+    path: '/diagnostico/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDiagnosticoIdRoute =
+  AuthenticatedDiagnosticoIdRouteImport.update({
+    id: '/diagnostico/$id',
+    path: '/diagnostico/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMensagensIndexRoute =
   AuthenticatedMensagensIndexRouteImport.update({
     id: '/mensagens/',
@@ -91,11 +98,12 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/boas-vindas': typeof AuthenticatedBoasVindasRoute
-  '/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/diagnostico/$id': typeof AuthenticatedDiagnosticoIdRoute
   '/mensagens/$id': typeof AuthenticatedMensagensIdRoute
   '/perdcomp/$id': typeof AuthenticatedPerdcompIdRoute
+  '/diagnostico/': typeof AuthenticatedDiagnosticoIndexRoute
   '/mensagens/': typeof AuthenticatedMensagensIndexRoute
   '/perdcomp/': typeof AuthenticatedPerdcompIndexRoute
 }
@@ -104,11 +112,12 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/boas-vindas': typeof AuthenticatedBoasVindasRoute
-  '/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/diagnostico/$id': typeof AuthenticatedDiagnosticoIdRoute
   '/mensagens/$id': typeof AuthenticatedMensagensIdRoute
   '/perdcomp/$id': typeof AuthenticatedPerdcompIdRoute
+  '/diagnostico': typeof AuthenticatedDiagnosticoIndexRoute
   '/mensagens': typeof AuthenticatedMensagensIndexRoute
   '/perdcomp': typeof AuthenticatedPerdcompIndexRoute
 }
@@ -119,11 +128,12 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/boas-vindas': typeof AuthenticatedBoasVindasRoute
-  '/_authenticated/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
+  '/_authenticated/diagnostico/$id': typeof AuthenticatedDiagnosticoIdRoute
   '/_authenticated/mensagens/$id': typeof AuthenticatedMensagensIdRoute
   '/_authenticated/perdcomp/$id': typeof AuthenticatedPerdcompIdRoute
+  '/_authenticated/diagnostico/': typeof AuthenticatedDiagnosticoIndexRoute
   '/_authenticated/mensagens/': typeof AuthenticatedMensagensIndexRoute
   '/_authenticated/perdcomp/': typeof AuthenticatedPerdcompIndexRoute
 }
@@ -134,11 +144,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/boas-vindas'
-    | '/diagnostico'
     | '/perfil'
     | '/portal'
+    | '/diagnostico/$id'
     | '/mensagens/$id'
     | '/perdcomp/$id'
+    | '/diagnostico/'
     | '/mensagens/'
     | '/perdcomp/'
   fileRoutesByTo: FileRoutesByTo
@@ -147,11 +158,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/boas-vindas'
-    | '/diagnostico'
     | '/perfil'
     | '/portal'
+    | '/diagnostico/$id'
     | '/mensagens/$id'
     | '/perdcomp/$id'
+    | '/diagnostico'
     | '/mensagens'
     | '/perdcomp'
   id:
@@ -161,11 +173,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/admin'
     | '/_authenticated/boas-vindas'
-    | '/_authenticated/diagnostico'
     | '/_authenticated/perfil'
     | '/_authenticated/portal'
+    | '/_authenticated/diagnostico/$id'
     | '/_authenticated/mensagens/$id'
     | '/_authenticated/perdcomp/$id'
+    | '/_authenticated/diagnostico/'
     | '/_authenticated/mensagens/'
     | '/_authenticated/perdcomp/'
   fileRoutesById: FileRoutesById
@@ -213,13 +226,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBoasVindasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/diagnostico': {
-      id: '/_authenticated/diagnostico'
-      path: '/diagnostico'
-      fullPath: '/diagnostico'
-      preLoaderRoute: typeof AuthenticatedDiagnosticoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/perfil': {
       id: '/_authenticated/perfil'
       path: '/perfil'
@@ -232,6 +238,20 @@ declare module '@tanstack/react-router' {
       path: '/portal'
       fullPath: '/portal'
       preLoaderRoute: typeof AuthenticatedPortalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/diagnostico/': {
+      id: '/_authenticated/diagnostico/'
+      path: '/diagnostico'
+      fullPath: '/diagnostico/'
+      preLoaderRoute: typeof AuthenticatedDiagnosticoIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/diagnostico/$id': {
+      id: '/_authenticated/diagnostico/$id'
+      path: '/diagnostico/$id'
+      fullPath: '/diagnostico/$id'
+      preLoaderRoute: typeof AuthenticatedDiagnosticoIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/mensagens/': {
@@ -268,11 +288,12 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBoasVindasRoute: typeof AuthenticatedBoasVindasRoute
-  AuthenticatedDiagnosticoRoute: typeof AuthenticatedDiagnosticoRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
+  AuthenticatedDiagnosticoIdRoute: typeof AuthenticatedDiagnosticoIdRoute
   AuthenticatedMensagensIdRoute: typeof AuthenticatedMensagensIdRoute
   AuthenticatedPerdcompIdRoute: typeof AuthenticatedPerdcompIdRoute
+  AuthenticatedDiagnosticoIndexRoute: typeof AuthenticatedDiagnosticoIndexRoute
   AuthenticatedMensagensIndexRoute: typeof AuthenticatedMensagensIndexRoute
   AuthenticatedPerdcompIndexRoute: typeof AuthenticatedPerdcompIndexRoute
 }
@@ -280,11 +301,12 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBoasVindasRoute: AuthenticatedBoasVindasRoute,
-  AuthenticatedDiagnosticoRoute: AuthenticatedDiagnosticoRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
+  AuthenticatedDiagnosticoIdRoute: AuthenticatedDiagnosticoIdRoute,
   AuthenticatedMensagensIdRoute: AuthenticatedMensagensIdRoute,
   AuthenticatedPerdcompIdRoute: AuthenticatedPerdcompIdRoute,
+  AuthenticatedDiagnosticoIndexRoute: AuthenticatedDiagnosticoIndexRoute,
   AuthenticatedMensagensIndexRoute: AuthenticatedMensagensIndexRoute,
   AuthenticatedPerdcompIndexRoute: AuthenticatedPerdcompIndexRoute,
 }

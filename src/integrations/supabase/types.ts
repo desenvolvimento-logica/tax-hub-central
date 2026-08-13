@@ -366,6 +366,7 @@ export type Database = {
         Row: {
           atualizado_em: string
           cnpj: string | null
+          concluido_em: string | null
           criado_em: string
           dados: Json
           data_levantamento: string
@@ -374,10 +375,12 @@ export type Database = {
           observacoes: string | null
           perfil_id: string
           responsavel: string | null
+          status: string
         }
         Insert: {
           atualizado_em?: string
           cnpj?: string | null
+          concluido_em?: string | null
           criado_em?: string
           dados?: Json
           data_levantamento?: string
@@ -386,10 +389,12 @@ export type Database = {
           observacoes?: string | null
           perfil_id: string
           responsavel?: string | null
+          status?: string
         }
         Update: {
           atualizado_em?: string
           cnpj?: string | null
+          concluido_em?: string | null
           criado_em?: string
           dados?: Json
           data_levantamento?: string
@@ -398,6 +403,7 @@ export type Database = {
           observacoes?: string | null
           perfil_id?: string
           responsavel?: string | null
+          status?: string
         }
         Relationships: [
           {

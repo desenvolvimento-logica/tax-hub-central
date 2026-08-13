@@ -1,14 +1,25 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { FileUp, Loader2, Plus, Printer, Save, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  FileUp,
+  Loader2,
+  Plus,
+  Printer,
+  Save,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -17,26 +28,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useSessao, formatarData } from "@/lib/hub";
+import { formatarData, useSessao } from "@/lib/hub";
 import {
   AMBITOS,
   SITUACAO_AMBITO_LABEL,
   SITUACAO_DEBITO_LABEL,
+  STATUS_LEVANTAMENTO_LABEL,
   alertas,
+  ambitoDevedor,
   analiseAmbito,
   analiseGeral,
+  certidoesRegulares,
   dadosVazios,
   debitoVazio,
   moeda,
+  normalizarDados,
+  omissaoVazia,
   pendenciasObrigatorias,
   totalAmbito,
   totalGeral,
   tudoRegular,
   type Ambito,
   type AmbitoChave,
-  type DadosDiagnostico,
+  type DadosLevantamento,
   type SituacaoAmbito,
   type SituacaoDebito,
+  type StatusLevantamento,
 } from "@/lib/diagnostico";
 import { lerRelatorio } from "@/lib/extracao-relatorio";
 import {
@@ -46,80 +63,149 @@ import {
   EstilosDocumento,
   FaixaSecao,
   LOGO_URL,
-  MARCA,
+  MARCA_LEVANTAMENTO as M,
   RodapeDocumento,
 } from "@/components/documento";
 
-export const Route = createFileRoute("/_authenticated/diagnostico")({
+export const Route = createFileRoute("/_authenticated/diagnostico/$id")({
   head: () => ({
     meta: [
       { title: "Levantamento de Débitos — HUB Tributário" },
       {
         name: "description",
         content:
-          "Anexe os relatórios municipais, estaduais e federais: o sistema identifica razão social, CNPJ e débitos e gera o levantamento para envio ao cliente.",
+          "Anexe os relatórios Federal, Estadual, Municipal e FGTS, revise o que o sistema extraiu e gere o diagnóstico final em PDF.",
       },
       { property: "og:title", content: "Levantamento de Débitos — HUB Tributário" },
       {
         property: "og:description",
-        content:
-          "Leitura automática dos relatórios de débito e geração do levantamento enviado ao cliente.",
+        content: "Extração assistida dos relatórios e geração do documento enviado ao cliente.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: LevantamentoPagina,
+  component: EditorLevantamento,
 });
 
-function LevantamentoPagina() {
+function EditorLevantamento() {
+  const { id } = Route.useParams();
+  const novo = id === "novo";
   const { data: sessao } = useSessao();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
-  // A data do documento é sempre a data da geração.
-  const dataDocumento = new Date().toISOString().slice(0, 10);
-
+  const [registroId, setRegistroId] = useState<string | null>(novo ? null : id);
+  const [status, setStatus] = useState<StatusLevantamento>("em_andamento");
+  // A data do levantamento é sempre a data do sistema no momento da criação.
+  const [dataDocumento, setDataDocumento] = useState(() => new Date().toISOString().slice(0, 10));
   const [empresa, setEmpresa] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [observacoes, setObservacoes] = useState("");
-  const [dados, setDados] = useState<DadosDiagnostico>(() => dadosVazios());
+  const [dados, setDados] = useState<DadosLevantamento>(() => dadosVazios());
   const [enviando, setEnviando] = useState<AmbitoChave | null>(null);
   const [leituras, setLeituras] = useState<string[]>([]);
 
   const responsavel = sessao?.perfil.nome_completo ?? "";
 
-  const { data: historico } = useQuery({
-    queryKey: ["diagnosticos"],
+  /* ---------- Cadastro de clientes compartilhado com o HUB ---------- */
+  const { data: clientes } = useQuery({
+    queryKey: ["clientes-hub"],
     enabled: Boolean(sessao),
+    queryFn: async () => {
+      const [decl, diag] = await Promise.all([
+        supabase
+          .from("declaracoes")
+          .select("cnpj, razao_social, nome")
+          .not("cnpj", "is", null)
+          .limit(2000),
+        supabase.from("diagnosticos").select("cnpj, empresa").limit(500),
+      ]);
+      const mapa = new Map<string, { nome: string; cnpj: string }>();
+      for (const d of decl.data ?? []) {
+        const nome = (d.razao_social ?? d.nome ?? "").trim();
+        if (!nome || !d.cnpj) continue;
+        mapa.set(d.cnpj, { nome, cnpj: d.cnpj });
+      }
+      for (const d of diag.data ?? []) {
+        if (!d.empresa) continue;
+        mapa.set(d.cnpj ?? d.empresa, { nome: d.empresa, cnpj: d.cnpj ?? "" });
+      }
+      return [...mapa.values()].sort((a, b) => a.nome.localeCompare(b.nome));
+    },
+  });
+
+  /* ---------- Carregamento de um levantamento existente ---------- */
+  const { data: registro } = useQuery({
+    queryKey: ["diagnostico", id],
+    enabled: Boolean(sessao) && !novo,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("diagnosticos")
-        .select("id, empresa, cnpj, responsavel, data_levantamento, criado_em")
-        .order("criado_em", { ascending: false })
-        .limit(15);
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
   });
 
+  useEffect(() => {
+    if (!registro) return;
+    setRegistroId(registro.id);
+    setEmpresa(registro.empresa);
+    setCnpj(registro.cnpj ?? "");
+    setObservacoes(registro.observacoes ?? "");
+    setDataDocumento(registro.data_levantamento);
+    setStatus((registro.status as StatusLevantamento) ?? "em_andamento");
+    setDados(normalizarDados(registro.dados));
+  }, [registro]);
+
+  const concluido = status === "concluido";
+
+  /* ---------- Persistência ---------- */
   const salvar = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (proximoStatus: StatusLevantamento) => {
       if (!sessao) throw new Error("Sessão não carregada.");
-      if (!empresa.trim()) throw new Error("Nenhuma razão social identificada nos anexos.");
-      const { error } = await supabase.from("diagnosticos").insert({
-        perfil_id: sessao.perfil.id,
+      if (!empresa.trim()) throw new Error("Informe ou selecione o cliente do levantamento.");
+      const payload = {
         empresa: empresa.trim(),
         cnpj: cnpj.trim() || null,
         responsavel: responsavel || null,
-        data_levantamento: dataDocumento,
         observacoes: observacoes.trim() || null,
+        status: proximoStatus,
+        concluido_em: proximoStatus === "concluido" ? new Date().toISOString() : null,
         dados: dados as unknown as never,
-      });
+      };
+
+      if (registroId) {
+        const { error } = await supabase.from("diagnosticos").update(payload).eq("id", registroId);
+        if (error) throw error;
+        return registroId;
+      }
+
+      const { data, error } = await supabase
+        .from("diagnosticos")
+        .insert({
+          ...payload,
+          perfil_id: sessao.perfil.id,
+          data_levantamento: dataDocumento,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      return data.id;
     },
-    onSuccess: () => {
-      toast.success("Levantamento registrado no HUB.");
+    onSuccess: (novoId, proximoStatus) => {
+      setRegistroId(novoId);
+      setStatus(proximoStatus);
       void queryClient.invalidateQueries({ queryKey: ["diagnosticos"] });
+      toast.success(
+        proximoStatus === "concluido"
+          ? "Levantamento concluído. Você já pode gerar o PDF final."
+          : "Levantamento salvo como Em andamento.",
+      );
+      if (novo) void navigate({ to: "/diagnostico/$id", params: { id: novoId } });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -131,6 +217,7 @@ function LevantamentoPagina() {
     }));
   }
 
+  /* ---------- Anexos + extração assistida ---------- */
   async function anexar(chave: AmbitoChave, arquivos: FileList | null) {
     if (!arquivos?.length || !sessao) return;
     setEnviando(chave);
@@ -140,28 +227,28 @@ function LevantamentoPagina() {
         const { error } = await supabase.storage.from("diagnosticos").upload(caminho, arquivo);
         if (error) throw error;
 
-        // Leitura automática: razão social, CNPJ e débitos apontados no relatório.
-        let identificados = 0;
-        let semDebitos = false;
         try {
           const leitura = await lerRelatorio(arquivo);
-          identificados = leitura.debitos.length;
-          semDebitos = leitura.semDebitos;
           if (leitura.razaoSocial) setEmpresa((atual) => atual || leitura.razaoSocial!);
           if (leitura.cnpj) setCnpj((atual) => atual || leitura.cnpj!);
           setDados((atual) => {
             const ambito = atual.ambitos[chave];
+            const debitos = [...ambito.debitos, ...leitura.debitos];
             return {
               ...atual,
               ambitos: {
                 ...atual.ambitos,
                 [chave]: {
                   ...ambito,
-                  debitos: [...ambito.debitos, ...leitura.debitos],
+                  debitos,
+                  omissoes: [...ambito.omissoes, ...leitura.omissoes],
+                  parcelamento: ambito.parcelamento || leitura.parcelamento,
+                  exigibilidadeSuspensa:
+                    ambito.exigibilidadeSuspensa || leitura.exigibilidadeSuspensa,
                   situacao:
-                    ambito.debitos.length + leitura.debitos.length > 0
+                    debitos.length > 0
                       ? "com_debitos"
-                      : semDebitos
+                      : leitura.semDebitos
                         ? "regular"
                         : ambito.situacao,
                 },
@@ -171,17 +258,19 @@ function LevantamentoPagina() {
           setLeituras((atual) => [
             ...atual,
             `${arquivo.name}: ${
-              identificados > 0
-                ? `${identificados} débito(s) identificado(s)`
-                : semDebitos
-                  ? "nenhum débito (documento negativo)"
+              leitura.debitos.length > 0
+                ? `${leitura.debitos.length} débito(s) identificado(s)`
+                : leitura.semDebitos
+                  ? "certidão/relatório sem débitos"
                   : "nenhum débito reconhecido automaticamente — revise manualmente"
+            }${leitura.omissoes.length ? ` · ${leitura.omissoes.length} omissão(ões)` : ""}${
+              leitura.ipva ? " · menção a IPVA" : ""
             }`,
           ]);
         } catch {
           setLeituras((atual) => [
             ...atual,
-            `${arquivo.name}: não foi possível ler o conteúdo — informe os débitos manualmente.`,
+            `${arquivo.name}: não foi possível ler o conteúdo — informe os dados manualmente.`,
           ]);
         }
 
@@ -191,17 +280,31 @@ function LevantamentoPagina() {
             ...atual.ambitos,
             [chave]: {
               ...atual.ambitos[chave],
-              documentos: [...atual.ambitos[chave].documentos, { nome: arquivo.name, caminho }],
+              documentos: [
+                ...atual.ambitos[chave].documentos,
+                { nome: arquivo.name, caminho, certidao: true },
+              ],
             },
           },
         }));
       }
-      toast.success("Relatório anexado e analisado.");
+      toast.success("Anexo enviado e analisado. Revise os dados extraídos.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao anexar o relatório.");
+      toast.error(e instanceof Error ? e.message : "Falha ao anexar o arquivo.");
     } finally {
       setEnviando(null);
     }
+  }
+
+  async function abrirAnexo(caminho: string) {
+    const { data, error } = await supabase.storage
+      .from("diagnosticos")
+      .createSignedUrl(caminho, 600);
+    if (error || !data) {
+      toast.error("Não foi possível abrir o anexo.");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener");
   }
 
   const pendencias = pendenciasObrigatorias(dados);
@@ -209,45 +312,77 @@ function LevantamentoPagina() {
   const total = totalGeral(dados);
   const listaAlertas = alertas(dados);
   const aberturas = analiseGeral(dados);
+  const certidoes = certidoesRegulares(dados);
 
   function imprimir() {
     if (!empresa.trim()) {
-      toast.error("Anexe os relatórios ou informe a razão social antes de gerar o documento.");
+      toast.error("Informe o cliente antes de gerar o documento.");
+      return;
+    }
+    if (!concluido) {
+      toast.error("Revise os dados extraídos e conclua o levantamento para gerar o PDF final.");
       return;
     }
     setTimeout(() => window.print(), 120);
   }
 
   return (
-    <div className="mx-auto grid max-w-[1400px] gap-8 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
-      <EstilosDocumento />
+    <div className="mx-auto grid max-w-[1400px] gap-8 xl:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
+      <EstilosDocumento marca={M} />
 
       <div className="space-y-6 print:hidden">
-        <header>
-          <h1 className="text-2xl font-semibold">Levantamento de Débitos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Anexe os relatórios de débito e certidões de cada esfera. O sistema lê os documentos,
-            identifica a razão social, o CNPJ e os débitos apontados e monta o documento para envio
-            ao cliente com a data de hoje.
-          </p>
+        <header className="space-y-3">
+          <Button asChild variant="ghost" size="sm" className="-ml-2">
+            <Link to="/diagnostico">
+              <ArrowLeft className="size-4" />
+              Levantamentos
+            </Link>
+          </Button>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold">
+                {novo && !registroId ? "Novo levantamento" : "Levantamento de débitos"}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Anexe os relatórios por âmbito. A extração automática é um auxílio — revise tudo
+                antes de concluir e gerar o PDF.
+              </p>
+            </div>
+            <Badge variant={concluido ? "default" : "outline"}>
+              {STATUS_LEVANTAMENTO_LABEL[status]}
+            </Badge>
+          </div>
         </header>
 
         <section className="surface-panel space-y-4 p-5">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Identificação (preenchida pelos anexos)
+            Cliente
           </h2>
           <div className="space-y-2">
-            <Label htmlFor="empresa">Razão social identificada</Label>
+            <Label htmlFor="empresa">Razão social</Label>
             <Input
               id="empresa"
+              list="clientes-hub"
               value={empresa}
-              onChange={(e) => setEmpresa(e.target.value)}
-              placeholder="Será preenchida ao anexar o primeiro relatório"
+              onChange={(e) => {
+                const valor = e.target.value;
+                setEmpresa(valor);
+                const achado = (clientes ?? []).find((c) => c.nome === valor);
+                if (achado?.cnpj) setCnpj(achado.cnpj);
+              }}
+              placeholder="Selecione um cliente já cadastrado ou digite um novo"
             />
+            <datalist id="clientes-hub">
+              {(clientes ?? []).map((c) => (
+                <option key={`${c.nome}-${c.cnpj}`} value={c.nome}>
+                  {c.cnpj}
+                </option>
+              ))}
+            </datalist>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="cnpj">CNPJ identificado</Label>
+              <Label htmlFor="cnpj">CNPJ</Label>
               <Input
                 id="cnpj"
                 value={cnpj}
@@ -256,7 +391,7 @@ function LevantamentoPagina() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Data do documento</Label>
+              <Label>Data do levantamento</Label>
               <Input value={formatarData(dataDocumento, false)} readOnly disabled />
             </div>
           </div>
@@ -269,6 +404,16 @@ function LevantamentoPagina() {
           ) : null}
         </section>
 
+        <section className="surface-panel space-y-2 p-5">
+          <Label htmlFor="mensagem">Mensagem inicial do documento (editável)</Label>
+          <Textarea
+            id="mensagem"
+            rows={7}
+            value={dados.mensagemInicial}
+            onChange={(e) => setDados((atual) => ({ ...atual, mensagemInicial: e.target.value }))}
+          />
+        </section>
+
         {AMBITOS.map((meta) => {
           const ambito = dados.ambitos[meta.chave];
           return (
@@ -278,13 +423,12 @@ function LevantamentoPagina() {
                   <h2 className="text-sm font-semibold">{meta.titulo}</h2>
                   <p className="mt-0.5 text-xs text-muted-foreground">{meta.descricao}</p>
                 </div>
-                <Badge variant={meta.obrigatorio ? "default" : "outline"}>
-                  {meta.obrigatorio ? "Obrigatório" : "Opcional"}
+                <Badge variant={ambitoDevedor(ambito) ? "destructive" : "outline"}>
+                  {ambitoDevedor(ambito) ? "Devedor" : "Regular"}
                 </Badge>
               </div>
 
               <div className="space-y-2">
-                <Label>Relatório de débitos ou certidão</Label>
                 <Button asChild variant="secondary" size="sm" disabled={enviando === meta.chave}>
                   <label className="cursor-pointer">
                     {enviando === meta.chave ? (
@@ -292,12 +436,12 @@ function LevantamentoPagina() {
                     ) : (
                       <FileUp className="size-4" />
                     )}
-                    Anexar e analisar
+                    Anexar relatório/certidão
                     <input
                       type="file"
                       multiple
                       className="hidden"
-                      accept=".pdf,.txt,.csv,.xml"
+                      accept=".pdf,.txt,.csv,.xml,image/*"
                       onChange={(e) => {
                         void anexar(meta.chave, e.target.files);
                         e.target.value = "";
@@ -311,7 +455,13 @@ function LevantamentoPagina() {
                       key={doc.caminho}
                       className="flex items-center justify-between gap-2 rounded-md bg-secondary px-3 py-1.5 text-xs"
                     >
-                      <span className="truncate">{doc.nome}</span>
+                      <button
+                        type="button"
+                        className="truncate text-left hover:underline"
+                        onClick={() => void abrirAnexo(doc.caminho)}
+                      >
+                        {doc.nome}
+                      </button>
                       <button
                         type="button"
                         className="text-muted-foreground hover:text-destructive"
@@ -350,9 +500,30 @@ function LevantamentoPagina() {
                 </Select>
               </div>
 
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="flex items-center gap-2 text-xs">
+                  <Checkbox
+                    checked={ambito.parcelamento}
+                    onCheckedChange={(v) =>
+                      atualizarAmbito(meta.chave, { parcelamento: v === true })
+                    }
+                  />
+                  Existe parcelamento
+                </label>
+                <label className="flex items-center gap-2 text-xs">
+                  <Checkbox
+                    checked={ambito.exigibilidadeSuspensa}
+                    onCheckedChange={(v) =>
+                      atualizarAmbito(meta.chave, { exigibilidadeSuspensa: v === true })
+                    }
+                  />
+                  Exigibilidade suspensa
+                </label>
+              </div>
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label>Débitos identificados nos anexos</Label>
+                  <Label>Débitos identificados</Label>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -369,14 +540,15 @@ function LevantamentoPagina() {
                 </div>
                 {ambito.debitos.length === 0 ? (
                   <p className="text-xs text-muted-foreground">
-                    Nenhum débito identificado — o documento apresentará esta esfera como regular.
+                    Nenhum débito — o documento apresentará esta esfera como Regular e a certidão
+                    anexada será citada como comprovação.
                   </p>
                 ) : (
                   ambito.debitos.map((debito) => (
                     <div key={debito.id} className="rounded-md border border-border p-3">
                       <div className="grid gap-2 sm:grid-cols-2">
                         <Input
-                          placeholder="Tributo (ex.: ICMS, IPVA, ISS)"
+                          placeholder="Tributo (ex.: ICMS, IPVA, ISS, FGTS)"
                           value={debito.tributo}
                           onChange={(e) =>
                             atualizarAmbito(meta.chave, {
@@ -387,7 +559,7 @@ function LevantamentoPagina() {
                           }
                         />
                         <Input
-                          placeholder="Competência / referência"
+                          placeholder="Competência / período"
                           value={debito.referencia}
                           onChange={(e) =>
                             atualizarAmbito(meta.chave, {
@@ -460,6 +632,63 @@ function LevantamentoPagina() {
                 )}
               </div>
 
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Omissão de declaração</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      atualizarAmbito(meta.chave, {
+                        omissoes: [...ambito.omissoes, omissaoVazia()],
+                      })
+                    }
+                  >
+                    <Plus className="size-4" />
+                    Omissão
+                  </Button>
+                </div>
+                {ambito.omissoes.map((omissao) => (
+                  <div key={omissao.id} className="flex items-center gap-2">
+                    <Input
+                      placeholder="Declaração/obrigação omitida"
+                      value={omissao.obrigacao}
+                      onChange={(e) =>
+                        atualizarAmbito(meta.chave, {
+                          omissoes: ambito.omissoes.map((o) =>
+                            o.id === omissao.id ? { ...o, obrigacao: e.target.value } : o,
+                          ),
+                        })
+                      }
+                    />
+                    <Input
+                      placeholder="Competência"
+                      className="max-w-[130px]"
+                      value={omissao.referencia}
+                      onChange={(e) =>
+                        atualizarAmbito(meta.chave, {
+                          omissoes: ambito.omissoes.map((o) =>
+                            o.id === omissao.id ? { ...o, referencia: e.target.value } : o,
+                          ),
+                        })
+                      }
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Remover omissão"
+                      onClick={() =>
+                        atualizarAmbito(meta.chave, {
+                          omissoes: ambito.omissoes.filter((o) => o.id !== omissao.id),
+                        })
+                      }
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
               <div className="space-y-2">
                 <Label>Complemento da análise desta esfera (opcional)</Label>
                 <Textarea
@@ -485,46 +714,44 @@ function LevantamentoPagina() {
 
           {pendencias.length > 0 ? (
             <p className="rounded-md bg-warning/15 p-3 text-xs text-foreground">
-              Relatórios obrigatórios ainda não anexados: {pendencias.join(", ")}.
+              Âmbitos ainda sem anexo: {pendencias.join(", ")}.
             </p>
           ) : null}
 
           <div className="flex flex-wrap gap-2">
-            <Button onClick={imprimir}>
-              <Printer className="size-4" />
-              Gerar documento em PDF
-            </Button>
-            <Button variant="secondary" onClick={() => salvar.mutate()} disabled={salvar.isPending}>
+            <Button
+              variant="secondary"
+              onClick={() => salvar.mutate("em_andamento")}
+              disabled={salvar.isPending}
+            >
               {salvar.isPending ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 <Save className="size-4" />
               )}
-              Salvar no HUB
+              Salvar em andamento
+            </Button>
+            <Button onClick={() => salvar.mutate("concluido")} disabled={salvar.isPending}>
+              <CheckCircle2 className="size-4" />
+              Revisei — concluir
+            </Button>
+            <Button variant="outline" onClick={imprimir} disabled={!concluido}>
+              <Printer className="size-4" />
+              Baixar PDF final
             </Button>
           </div>
+          {!concluido ? (
+            <p className="text-xs text-muted-foreground">
+              O PDF final é liberado após a revisão dos dados extraídos e a conclusão do
+              levantamento.
+            </p>
+          ) : null}
         </section>
-
-        {(historico ?? []).length > 0 ? (
-          <section className="surface-panel p-5">
-            <h2 className="text-sm font-semibold">Últimos levantamentos registrados</h2>
-            <ul className="mt-3 space-y-2 text-xs">
-              {(historico ?? []).map((item) => (
-                <li key={item.id} className="flex items-center justify-between gap-2">
-                  <span className="truncate font-medium">{item.empresa}</span>
-                  <span className="text-muted-foreground">
-                    {formatarData(item.criado_em, false)} · {item.responsavel ?? "—"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
       </div>
 
       {/* ============ Documento gerado ============ */}
       <div className="doc-preview">
-        {/* Capa — mesma composição do comunicado de boas-vindas */}
+        {/* Capa */}
         <section aria-label="Capa do documento" className="doc-page">
           <div className="doc-body">
             <div
@@ -532,7 +759,7 @@ function LevantamentoPagina() {
               style={{
                 position: "absolute",
                 inset: 0,
-                background: `radial-gradient(120% 60% at 85% -10%, ${MARCA.douradoSuave} 0%, transparent 60%), linear-gradient(180deg, #fff 0%, ${MARCA.creme} 55%, ${MARCA.cinza} 100%)`,
+                background: `radial-gradient(120% 60% at 85% -10%, ${M.douradoSuave} 0%, transparent 60%), linear-gradient(180deg, #fff 0%, ${M.creme} 55%, ${M.cinza} 100%)`,
               }}
             />
             <div
@@ -543,7 +770,7 @@ function LevantamentoPagina() {
                 top: 0,
                 bottom: 0,
                 width: "2.4%",
-                background: `linear-gradient(180deg, ${MARCA.dourado}, ${MARCA.douradoEscuro})`,
+                background: `linear-gradient(180deg, ${M.dourado}, ${M.douradoEscuro})`,
               }}
             />
 
@@ -568,7 +795,7 @@ function LevantamentoPagina() {
                   fontSize: "0.95em",
                   letterSpacing: "0.28em",
                   textTransform: "uppercase",
-                  color: MARCA.douradoEscuro,
+                  color: M.douradoEscuro,
                   fontWeight: 600,
                 }}
               >
@@ -592,7 +819,7 @@ function LevantamentoPagina() {
                   fontFamily: '"Space Grotesk", Arial, sans-serif',
                   fontSize: "2.1em",
                   fontWeight: 500,
-                  color: MARCA.douradoEscuro,
+                  color: M.douradoEscuro,
                 }}
               >
                 de débitos
@@ -602,22 +829,21 @@ function LevantamentoPagina() {
                 style={{
                   marginTop: "7%",
                   alignSelf: "flex-start",
-                  borderRadius: 0,
-                  background: `linear-gradient(90deg, ${MARCA.dourado}, ${MARCA.douradoSuave})`,
+                  background: `linear-gradient(90deg, ${M.dourado}, ${M.douradoSuave})`,
                   padding: "0.7em 1.6em",
                   fontSize: "1.05em",
                   fontWeight: 600,
                 }}
               >
-                Consulta nas esferas <strong>Municipal, Estadual e Federal</strong>
+                Âmbitos <strong>Federal, Estadual, Municipal e FGTS</strong>
               </div>
 
               <div
                 style={{
                   marginTop: "6%",
                   background: "#fff",
-                  border: `1px solid ${MARCA.cinza}`,
-                  borderTop: `3px solid ${MARCA.dourado}`,
+                  border: `1px solid ${M.cinza}`,
+                  borderTop: `3px solid ${M.dourado}`,
                   padding: "6% 6% 5%",
                   fontSize: "1.05em",
                   lineHeight: 1.75,
@@ -629,7 +855,7 @@ function LevantamentoPagina() {
                     fontSize: "0.7em",
                     letterSpacing: "0.24em",
                     textTransform: "uppercase",
-                    color: MARCA.douradoEscuro,
+                    color: M.douradoEscuro,
                     fontWeight: 600,
                   }}
                 >
@@ -647,8 +873,8 @@ function LevantamentoPagina() {
                 >
                   {empresa.trim() ? empresa.trim().toUpperCase() : "RAZÃO SOCIAL DO CLIENTE"}
                 </p>
-                <p style={{ margin: "0.35em 0 0", fontSize: "0.9em", color: MARCA.grafiteClaro }}>
-                  {cnpj.trim() ? `CNPJ ${cnpj.trim()}` : "CNPJ a identificar"} · Documento gerado em{" "}
+                <p style={{ margin: "0.35em 0 0", fontSize: "0.9em", color: M.grafiteClaro }}>
+                  {cnpj.trim() ? `CNPJ ${cnpj.trim()}` : "CNPJ a identificar"} · Levantamento de{" "}
                   {formatarData(dataDocumento, false)}
                 </p>
               </div>
@@ -659,71 +885,42 @@ function LevantamentoPagina() {
                   marginBottom: "8%",
                   display: "flex",
                   alignItems: "center",
+                  justifyContent: "space-between",
                   gap: "5%",
-                  borderTop: `2px solid ${MARCA.dourado}`,
+                  borderTop: `2px solid ${M.dourado}`,
                   paddingTop: "5%",
                 }}
               >
-                <div style={{ flex: 1 }}>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "0.72em",
-                      letterSpacing: "0.24em",
-                      textTransform: "uppercase",
-                      color: MARCA.douradoEscuro,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Responsável pelo levantamento
-                  </p>
-                  <p
-                    style={{
-                      margin: "0.35em 0 0",
-                      fontSize: "1.5em",
-                      fontWeight: 700,
-                      fontFamily: '"Space Grotesk", Arial, sans-serif',
-                    }}
-                  >
-                    {responsavel || "Departamento Tributário"}
-                  </p>
-                </div>
+                <span style={{ fontSize: "0.8em", color: M.grafiteClaro }}>
+                  Documento confidencial — destinado exclusivamente ao cliente identificado.
+                </span>
                 <div
                   aria-hidden="true"
                   style={{
                     width: "22%",
                     height: "0.5em",
-                    background: `linear-gradient(90deg, ${MARCA.douradoSuave}, ${MARCA.dourado})`,
+                    background: `linear-gradient(90deg, ${M.douradoSuave}, ${M.dourado})`,
                   }}
                 />
               </div>
             </div>
 
-            <RodapeDocumento pagina={1} total={2} />
+            <RodapeDocumento pagina={1} total={2} marca={M} />
           </div>
         </section>
 
         {/* Conteúdo */}
         <div className="doc-flow">
           <div className="doc-flow-body">
-            <CabecalhoMarca titulo="Levantamento de débitos" />
+            <CabecalhoMarca titulo="Levantamento de débitos" marca={M} />
 
             <div style={{ padding: "3% 8% 0" }}>
               <section>
-                <FaixaSecao>Sobre este levantamento</FaixaSecao>
-                <p style={{ margin: "0 0 1em" }}>
-                  Prezados, <strong>{empresa.trim() || "cliente"}</strong>.
-                </p>
-                <p style={{ margin: "0 0 1em" }}>
-                  Realizamos a consulta de débitos da empresa nos portais governamentais das esferas
-                  municipal, estadual e federal. Este documento apresenta, de forma organizada, o
-                  resultado apurado a partir dos relatórios e certidões obtidos, permitindo o
-                  acompanhamento das pendências e o planejamento das regularizações necessárias.
-                </p>
+                <FaixaSecao marca={M}>Dados do cliente</FaixaSecao>
                 <table>
                   <tbody>
                     <tr>
-                      <th style={{ width: "34%" }}>Empresa</th>
+                      <th style={{ width: "34%" }}>Razão social</th>
                       <td>{empresa.trim() || "—"}</td>
                     </tr>
                     <tr>
@@ -735,25 +932,16 @@ function LevantamentoPagina() {
                       <td>{formatarData(dataDocumento, false)}</td>
                     </tr>
                     <tr>
-                      <th>Responsável</th>
+                      <th>Responsável pela análise</th>
                       <td>{responsavel || "Departamento Tributário"}</td>
-                    </tr>
-                    <tr>
-                      <th>Documentos analisados</th>
-                      <td>
-                        {AMBITOS.map((meta) => dados.ambitos[meta.chave].documentos.length).reduce(
-                          (a, b) => a + b,
-                          0,
-                        )}{" "}
-                        relatório(s)/certidão(ões)
-                      </td>
                     </tr>
                   </tbody>
                 </table>
+                <p style={{ margin: "1em 0" }}>{dados.mensagemInicial}</p>
               </section>
 
               <section>
-                <FaixaSecao>Análise do resultado apurado</FaixaSecao>
+                <FaixaSecao marca={M}>Resumo por âmbito</FaixaSecao>
                 {aberturas.map((paragrafo) => (
                   <p key={paragrafo} style={{ margin: "0 0 1em" }}>
                     {paragrafo}
@@ -762,7 +950,7 @@ function LevantamentoPagina() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Esfera</th>
+                      <th>Âmbito</th>
                       <th>Situação</th>
                       <th>Apontamentos</th>
                       <th style={{ textAlign: "right" }}>Valor</th>
@@ -771,34 +959,35 @@ function LevantamentoPagina() {
                   <tbody>
                     {AMBITOS.map((meta) => {
                       const ambito = dados.ambitos[meta.chave];
-                      const qtd = ambito.debitos.length;
                       return (
                         <tr key={meta.chave}>
-                          <td>{meta.titulo}</td>
-                          <td>
-                            {qtd > 0
-                              ? SITUACAO_AMBITO_LABEL.com_debitos
-                              : SITUACAO_AMBITO_LABEL[ambito.situacao]}
+                          <td>{meta.curto}</td>
+                          <td style={{ fontWeight: 700 }}>
+                            {ambitoDevedor(ambito)
+                              ? "Devedor"
+                              : ambito.situacao === "nao_aplicavel"
+                                ? SITUACAO_AMBITO_LABEL.nao_aplicavel
+                                : "Regular"}
                           </td>
-                          <td>{qtd}</td>
+                          <td>{ambito.debitos.length}</td>
                           <td style={{ textAlign: "right" }}>{moeda(totalAmbito(ambito))}</td>
                         </tr>
                       );
                     })}
                     <tr>
-                      <td colSpan={3} style={{ fontWeight: 700, background: MARCA.cinza }}>
+                      <td colSpan={3} style={{ fontWeight: 700, background: M.cinza }}>
                         Total apurado
                       </td>
-                      <td style={{ textAlign: "right", fontWeight: 700, background: MARCA.cinza }}>
+                      <td style={{ textAlign: "right", fontWeight: 700, background: M.cinza }}>
                         {moeda(total)}
                       </td>
                     </tr>
                   </tbody>
                 </table>
                 {regular ? (
-                  <Aviso titulo="Empresa regular na data da consulta" tom="neutro">
-                    Não foram identificados débitos nas esferas consultadas. Os relatórios e
-                    certidões utilizados acompanham este levantamento.
+                  <Aviso titulo="Empresa regular na data da consulta" tom="neutro" marca={M}>
+                    Não foram identificados débitos nas esferas consultadas. As certidões que
+                    comprovam a regularidade seguem anexas a este levantamento.
                   </Aviso>
                 ) : null}
               </section>
@@ -807,14 +996,14 @@ function LevantamentoPagina() {
                 const ambito = dados.ambitos[meta.chave];
                 return (
                   <section key={meta.chave}>
-                    <FaixaSecao>{meta.titulo}</FaixaSecao>
+                    <FaixaSecao marca={M}>{meta.titulo}</FaixaSecao>
                     <p style={{ margin: "0 0 1em" }}>{analiseAmbito(meta.titulo, ambito)}</p>
                     {ambito.debitos.length > 0 ? (
                       <table>
                         <thead>
                           <tr>
                             <th>Tributo</th>
-                            <th>Competência</th>
+                            <th>Competência/período</th>
                             <th>Vencimento</th>
                             <th>Situação</th>
                             <th style={{ textAlign: "right" }}>Valor</th>
@@ -832,7 +1021,7 @@ function LevantamentoPagina() {
                           ))}
                           <tr>
                             <td colSpan={4} style={{ fontWeight: 700 }}>
-                              Total da esfera
+                              Total do âmbito
                             </td>
                             <td style={{ textAlign: "right", fontWeight: 700 }}>
                               {moeda(totalAmbito(ambito))}
@@ -841,11 +1030,24 @@ function LevantamentoPagina() {
                         </tbody>
                       </table>
                     ) : null}
+                    {ambito.omissoes.length > 0 ? (
+                      <p style={{ margin: "0 0 1em" }}>
+                        Omissão de entrega identificada:{" "}
+                        {ambito.omissoes
+                          .map((o) =>
+                            [o.obrigacao || "declaração não identificada", o.referencia]
+                              .filter(Boolean)
+                              .join(" — "),
+                          )
+                          .join("; ")}
+                        .
+                      </p>
+                    ) : null}
                     {ambito.observacao.trim() ? (
                       <p style={{ margin: "0 0 1em" }}>{ambito.observacao}</p>
                     ) : null}
                     {ambito.documentos.length > 0 ? (
-                      <p style={{ margin: "0 0 1em", fontSize: "0.85em", color: MARCA.grafiteClaro }}>
+                      <p style={{ margin: "0 0 1em", fontSize: "0.85em", color: M.grafiteClaro }}>
                         Documento(s) analisado(s): {ambito.documentos.map((d) => d.nome).join(", ")}.
                       </p>
                     ) : null}
@@ -853,23 +1055,35 @@ function LevantamentoPagina() {
                 );
               })}
 
-              {dados.declaracoes.length > 0 ? (
+              <section>
+                <FaixaSecao marca={M}>Pontos de atenção</FaixaSecao>
+                {listaAlertas.map((alerta) => (
+                  <Aviso key={alerta.titulo} titulo={alerta.titulo} tom={alerta.tom} marca={M}>
+                    {alerta.texto}
+                  </Aviso>
+                ))}
+                <Aviso titulo="Abrangência do levantamento" tom="neutro" marca={M}>
+                  As informações refletem a situação constante nos sistemas oficiais na data desta
+                  consulta. Débitos em aberto sofrem atualização de juros e multa até a data do
+                  efetivo pagamento, sendo necessário o recálculo das guias no momento da quitação.
+                </Aviso>
+              </section>
+
+              {certidoes.length > 0 ? (
                 <section>
-                  <FaixaSecao>Declarações</FaixaSecao>
+                  <FaixaSecao marca={M}>Certidões anexas (comprovação de regularidade)</FaixaSecao>
                   <table>
                     <thead>
                       <tr>
-                        <th>Declaração</th>
-                        <th>Competência</th>
-                        <th>Situação</th>
+                        <th style={{ width: "26%" }}>Âmbito</th>
+                        <th>Documento anexo</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {dados.declaracoes.map((decl) => (
-                        <tr key={decl.id}>
-                          <td>{decl.tipo || "—"}</td>
-                          <td>{decl.referencia || "—"}</td>
-                          <td>{decl.situacao || "—"}</td>
+                      {certidoes.map((c) => (
+                        <tr key={`${c.ambito}-${c.nome}`}>
+                          <td>{c.ambito}</td>
+                          <td>{c.nome}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -878,34 +1092,16 @@ function LevantamentoPagina() {
               ) : null}
 
               <section>
-                <FaixaSecao>Pontos de atenção</FaixaSecao>
-                {listaAlertas.map((alerta) => (
-                  <Aviso key={alerta.titulo} titulo={alerta.titulo} tom={alerta.tom}>
-                    {alerta.texto}
-                  </Aviso>
-                ))}
-                <Aviso titulo="Abrangência do levantamento" tom="neutro">
-                  As informações refletem a situação constante nos portais governamentais na data
-                  desta consulta. Débitos em aberto sofrem atualização de juros e multa até a data do
-                  efetivo pagamento, sendo necessário o recálculo das guias no momento da quitação.
-                </Aviso>
-              </section>
-
-              <section>
-                <FaixaSecao>Estamos à disposição</FaixaSecao>
-                <p style={{ margin: "0 0 1em" }}>
-                  O Departamento Tributário permanece à disposição para esclarecer dúvidas, realizar
-                  o recálculo de guias, apresentar as formas de pagamento disponíveis, simular
-                  parcelamentos e acompanhar a regularização dos débitos apontados. Basta acionar o
-                  seu contato principal no departamento.
-                </p>
-                <p style={{ margin: 0, fontSize: "0.85em", color: MARCA.grafiteClaro }}>
-                  {CONTATO.telefone} · {CONTATO.email}
+                <FaixaSecao marca={M}>Encerramento</FaixaSecao>
+                <p style={{ margin: "0 0 1em" }}>{dados.mensagemFinal}</p>
+                <p style={{ margin: "1.5em 0 0", fontWeight: 700 }}>Departamento Tributário</p>
+                <p style={{ margin: "0.2em 0 0", fontSize: "0.9em", color: M.grafiteClaro }}>
+                  Lógica Assessoria Contábil · {CONTATO.telefone} · {CONTATO.email}
                 </p>
               </section>
             </div>
 
-            <RodapeDocumento pagina={2} total={2} />
+            <RodapeDocumento pagina={2} total={2} marca={M} />
           </div>
         </div>
       </div>
