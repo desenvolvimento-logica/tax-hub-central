@@ -254,7 +254,7 @@ export const salvarAcompanhamento = createServerFn({ method: "POST" })
     const mudancas = diferencas(anterior as Record<string, unknown> | null, data);
     if (mudancas.length) {
       await supabaseAdmin.from("log_alteracoes").insert(
-        mudancas.map((m) => ({
+        mudancas.map((m: { campo: string; anterior: string | null; novo: string | null }) => ({
           declaracao_id: data.declaracao_id,
           usuario_id: perfil?.id ?? null,
           usuario_nome: perfil?.nome_completo ?? "",
