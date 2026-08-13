@@ -431,7 +431,7 @@ function PainelPerdcomp() {
                       <p className="text-xs text-muted-foreground">{documento(d.cnpj)}</p>
                     </TableCell>
                     <TableCell className="text-sm">
-                      <p>{d.grupo_tributo ?? d.tipo_credito ?? "—"}</p>
+                      <p>{d.grupo_tributo || d.codigo_receita || d.tipo_credito || "—"}</p>
                       <p className="text-xs text-muted-foreground">{d.periodo_apuracao ?? "—"}</p>
                     </TableCell>
                     <TableCell>
