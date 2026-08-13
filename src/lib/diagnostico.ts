@@ -400,3 +400,188 @@ export function alertas(dados: DadosLevantamento): Alerta[] {
   lista.push({ titulo: "Débitos sindicais", texto: AVISO_SINDICAL, tom: "neutro" });
   return lista;
 }
+
+/* ==========================================================================
+   Parecer técnico — tudo derivado do conteúdo dos anexos
+   ========================================================================== */
+
+export type Parecer = {
+  /** Classificação institucional da empresa na data da consulta. */
+  classificacao: "regular" | "atencao" | "critico" | "incompleto";
+  selo: string;
+  sintese: string;
+  indicadores: { rotulo: string; valor: string; nota?: string }[];
+};
+
+function contagemGlobal(dados: DadosLevantamento) {
+  const debitos = Object.values(dados.ambitos).flatMap((a) => a.debitos);
+  return {
+    debitos,
+    abertos: debitos.filter((d) => d.situacao === "aberto"),
+    parcelados: debitos.filter((d) => d.situacao === "parcelado"),
+    suspensos: debitos.filter((d) => d.situacao === "exigibilidade_suspensa"),
+    dividaAtiva: debitos.filter((d) => d.situacao === "divida_ativa"),
+  };
+}
+
+/** Diagnóstico consolidado: o sistema conclui, o colaborador apenas confere. */
+export function parecer(dados: DadosLevantamento): Parecer {
+  const c = contagemGlobal(dados);
+  const total = totalGeral(dados);
+  const devedores = AMBITOS.filter((a) => ambitoDevedor(dados.ambitos[a.chave]));
+  const semDocumento = AMBITOS.filter(
+    (a) => situacaoApurada(dados.ambitos[a.chave]) === "nao_aplicavel",
+  );
+
+  const indicadores = [
+    { rotulo: "Esferas consultadas", valor: `${AMBITOS.length - semDocumento.length} de ${AMBITOS.length}` },
+    { rotulo: "Esferas com débito", valor: String(devedores.length) },
+    { rotulo: "Apontamentos", valor: String(c.debitos.length) },
+    { rotulo: "Total apurado", valor: moeda(total) },
+  ];
+
+  if (semDocumento.length === AMBITOS.length) {
+    return {
+      classificacao: "incompleto",
+      selo: "Levantamento incompleto",
+      sintese:
+        "Ainda não há documentos oficiais suficientes para emitir conclusão. As consultas das esferas devem ser anexadas para que a análise seja concluída.",
+      indicadores,
+    };
+  }
+
+  if (devedores.length === 0) {
+    return {
+      classificacao: semDocumento.length > 0 ? "incompleto" : "regular",
+      selo: semDocumento.length > 0 ? "Regular com ressalva" : "Situação regular",
+      sintese:
+        semDocumento.length > 0
+          ? `Nas esferas efetivamente consultadas a empresa está regular. Permanece pendente a comprovação de ${semDocumento
+              .map((a) => a.curto)
+              .join(", ")}, sem a qual não é possível atestar a regularidade plena.`
+          : "A empresa encontra-se regular perante as esferas Federal, Estadual, Municipal e o FGTS na data desta consulta, com aptidão para obtenção das respectivas certidões negativas ou positivas com efeito de negativa.",
+      indicadores,
+    };
+  }
+
+  const critico = c.dividaAtiva.length > 0 || temOmissao(dados) || total >= 50000;
+  return {
+    classificacao: critico ? "critico" : "atencao",
+    selo: critico ? "Requer ação imediata" : "Requer regularização",
+    sintese: `Foram identificados ${c.debitos.length} apontamento(s) em ${devedores.length} esfera(s) — ${devedores
+      .map((a) => a.curto)
+      .join(", ")} —, totalizando ${moeda(total)} na data desta consulta.${
+      c.dividaAtiva.length > 0
+        ? " Parte dos valores já está inscrita em dívida ativa, etapa em que o crédito é passível de execução fiscal."
+        : ""
+    }${
+      c.parcelados.length > 0 || c.suspensos.length > 0
+        ? " Há débitos sob parcelamento e/ou com exigibilidade suspensa, que exigem manutenção do recolhimento para preservar seus efeitos."
+        : ""
+    }`,
+    indicadores,
+  };
+}
+
+/** Efeitos práticos e fundamentos legais aplicáveis ao que foi identificado. */
+export function impactos(dados: DadosLevantamento): Alerta[] {
+  const c = contagemGlobal(dados);
+  const lista: Alerta[] = [];
+
+  if (c.debitos.length > 0) {
+    lista.push({
+      titulo: "Certidões e habilitação da empresa",
+      texto:
+        "A existência de débito exigível impede a emissão de certidão negativa (arts. 205 e 206 do Código Tributário Nacional), o que restringe participação em licitações, obtenção de crédito, financiamentos, alvarás e operações societárias enquanto a pendência não for regularizada.",
+      tom: "atencao",
+    });
+  }
+
+  if (c.abertos.length > 0) {
+    lista.push({
+      titulo: "Acréscimos legais sobre os valores em aberto",
+      texto:
+        "Os débitos vencidos sofrem incidência de multa e juros de mora até a data do efetivo pagamento (art. 161 do CTN e art. 61 da Lei nº 9.430/96). Por isso as guias devem ser recalculadas no momento da quitação: os valores desta análise são posicionais.",
+      tom: "atencao",
+    });
+  }
+
+  if (c.dividaAtiva.length > 0) {
+    lista.push({
+      titulo: "Débitos inscritos em dívida ativa",
+      texto:
+        "Créditos inscritos em dívida ativa constituem título executivo e podem ser cobrados por execução fiscal, com risco de penhora e protesto da certidão (Lei nº 6.830/80 e art. 20-B da Lei nº 10.522/02). Recomendamos priorizar a negociação ou adesão a programa de parcelamento vigente.",
+      tom: "atencao",
+    });
+  }
+
+  if (c.parcelados.length > 0) {
+    lista.push({
+      titulo: "Parcelamentos em curso",
+      texto:
+        "O parcelamento suspende a exigibilidade do crédito (art. 151, VI, do CTN) apenas enquanto as parcelas são pagas em dia. O inadimplemento acarreta rescisão, restabelecimento integral do saldo e nova inscrição em dívida ativa.",
+      tom: "atencao",
+    });
+  }
+
+  if (c.suspensos.length > 0) {
+    lista.push({
+      titulo: "Débitos com exigibilidade suspensa",
+      texto:
+        "Os valores com exigibilidade suspensa (art. 151 do CTN) não são cobrados no momento, mas permanecem em aberto e podem voltar a ser exigidos conforme o desfecho do processo administrativo ou judicial. O acompanhamento é indispensável.",
+      tom: "neutro",
+    });
+  }
+
+  if (ambitoDevedor(dados.ambitos.fgts)) {
+    lista.push({
+      titulo: "Regularidade do FGTS",
+      texto:
+        "Sem a regularidade do FGTS não é emitido o Certificado de Regularidade (CRF), documento exigido para contratações com o poder público e para obtenção de crédito em instituições oficiais (art. 27 da Lei nº 8.036/90).",
+      tom: "atencao",
+    });
+  }
+
+  return lista;
+}
+
+/** Plano de regularização sugerido, na ordem de prioridade técnica. */
+export function planoAcao(dados: DadosLevantamento): string[] {
+  const c = contagemGlobal(dados);
+  const passos: string[] = [];
+
+  if (temOmissao(dados)) {
+    passos.push(
+      "Transmitir as declarações omissas identificadas — a entrega é pré-requisito para a emissão de certidões e evita o agravamento das multas por atraso.",
+    );
+  }
+  if (c.dividaAtiva.length > 0) {
+    passos.push(
+      "Tratar prioritariamente os débitos inscritos em dívida ativa, avaliando negociação ou transação tributária antes do ajuizamento da execução fiscal.",
+    );
+  }
+  if (c.abertos.length > 0) {
+    passos.push(
+      "Solicitar ao Departamento Tributário o recálculo das guias dos débitos em aberto e definir entre quitação à vista ou parcelamento, conforme a capacidade de caixa da empresa.",
+    );
+  }
+  if (c.parcelados.length > 0) {
+    passos.push(
+      "Confirmar o pagamento em dia das parcelas em curso e manter o controle mensal para preservar a suspensão da exigibilidade.",
+    );
+  }
+  if (temIpva(dados)) {
+    passos.push(
+      "Encaminhar os débitos de IPVA ao despachante responsável pelos veículos, acompanhando a baixa junto ao órgão estadual.",
+    );
+  }
+  if (pendenciasObrigatorias(dados).length > 0) {
+    passos.push(
+      `Complementar o levantamento com as consultas ainda não apresentadas (${pendenciasObrigatorias(dados).join(", ")}).`,
+    );
+  }
+  passos.push(
+    "Após as regularizações, emitir novas certidões para comprovar a situação e programar revisão periódica — sugerimos acompanhamento trimestral.",
+  );
+  return passos;
+}
