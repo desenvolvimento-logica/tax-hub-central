@@ -253,12 +253,13 @@ function DetalheMensagem() {
                   portal
                 </span>
               )}
-              {mensagem.primeira_leitura_gob && (
+              {mensagem.data_leitura_gob && (
                 <span className="ml-2 text-xs text-muted-foreground">
-                  (e-CAC/GOB sinalizou leitura em {formatarData(mensagem.primeira_leitura_gob)}
-                  {mensagem.leitor_gob ? ` por ${mensagem.leitor_gob}` : ""})
+                  (e-CAC sinalizou leitura em {formatarData(mensagem.data_leitura_gob)} — sem
+                  identificação de colaborador)
                 </span>
               )}
+
             </dd>
           </div>
         </dl>
