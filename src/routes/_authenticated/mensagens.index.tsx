@@ -31,6 +31,7 @@ import {
   SIM_NAO_OPCOES,
   TAGS_GOB,
   TRIAGEM_LABEL,
+  triagemEfetiva,
   dentroDoPeriodo,
   leituraEfetiva,
 } from "@/lib/gob";
@@ -171,7 +172,7 @@ function ListaMensagens() {
       if (!simNao(importante, m.importante)) return false;
       if (!dentroDoPeriodo(m.data_recebimento, enviadaEm, enviadaDe, enviadaAte)) return false;
       if (!dentroDoPeriodo(m.exibicao_ate, exibicao, exibicaoDe, exibicaoAte)) return false;
-      if (triagem !== TODOS && m.triagem !== triagem) return false;
+      if (triagem !== TODOS && triagemEfetiva(m, m.visualizacoes) !== triagem) return false;
       if (tag !== TODOS && (m.tag ?? "") !== tag) return false;
       if (organizacao !== TODOS && (m.organizacao ?? "") !== organizacao) return false;
       if (busca) {
@@ -577,8 +578,9 @@ function ListaMensagens() {
                     {formatarData(m.exibicao_ate, false)}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={m.triagem === "concluido" ? "secondary" : "outline"}>
-                      {TRIAGEM_LABEL[m.triagem] ?? m.triagem}
+                    <Badge variant={triagemEfetiva(m, m.visualizacoes) === "concluido" ? "secondary" : "outline"}>
+                      {TRIAGEM_LABEL[triagemEfetiva(m, m.visualizacoes)] ??
+                        triagemEfetiva(m, m.visualizacoes)}
                     </Badge>
                   </TableCell>
                 </TableRow>
