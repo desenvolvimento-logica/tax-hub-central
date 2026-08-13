@@ -3,6 +3,7 @@
  * Espelha as declarações do GOB na base do HUB, roda a auditoria automática,
  * registra mudanças de situação e lê o responsável pelo preenchimento no PDF.
  */
+import type { Json } from "@/integrations/supabase/types";
 import { consultarGob, credenciaisGob, type RegistroGob } from "@/lib/gob.server";
 
 type Achado = { codigo: string; descricao: string; severidade: "atencao" | "critico" };
@@ -68,7 +69,7 @@ export function normalizar(r: RegistroGob) {
     arquivo_documento_nome: texto(r["arquivoDocumentoName"]),
     arquivo_recibo_id: texto(r["arquivoReciboId"]) ?? texto(r["arquivoRecibo"]),
     arquivo_recibo_nome: texto(r["arquivoReciboName"]),
-    dados: r as unknown as Record<string, never>,
+    dados: r as unknown as Json,
     ultima_sincronizacao: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
