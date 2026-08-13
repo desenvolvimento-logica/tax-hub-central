@@ -110,9 +110,17 @@ export function dentroDoPeriodo(
   }
 }
 
+export type LeituraEfetiva = {
+  origem: "portal" | "gob";
+  quem: string;
+  quando: string;
+};
+
 /**
- * Regra do HUB: mesmo que o GOB informe leitura no e-CAC, a primeira leitura só
- * é considerada efetiva quando um colaborador visualiza a mensagem no portal.
+ * Regra do HUB:
+ * - leitura registrada no portal sempre prevalece (nome + data/hora do colaborador);
+ * - leitura informada pelo GOB só conta quando o GOB traz o nome de quem visualizou;
+ * - leitura apenas sinalizada no e-CAC (sem nome) permanece PENDENTE para leitura no portal.
  */
 export function primeiraLeituraHumana(
   visualizacoes: { data_visualizacao: string; perfis: { nome_completo: string } | null }[] | null,
@@ -124,3 +132,27 @@ export function primeiraLeituraHumana(
   if (!primeira) return null;
   return { quem: primeira.perfis?.nome_completo ?? "—", quando: primeira.data_visualizacao };
 }
+
+export function leituraEfetiva(
+  mensagem: {
+    leitor_gob?: string | null;
+    primeira_leitura_gob?: string | null;
+    data_leitura_gob?: string | null;
+    leitura_gob?: boolean | null;
+  },
+  visualizacoes: { data_visualizacao: string; perfis: { nome_completo: string } | null }[] | null,
+): LeituraEfetiva | null {
+  const portal = primeiraLeituraHumana(visualizacoes);
+  if (portal) return { origem: "portal", quem: portal.quem, quando: portal.quando };
+
+  const quem = mensagem.leitor_gob?.trim();
+  const quando = mensagem.primeira_leitura_gob ?? mensagem.data_leitura_gob;
+  if (mensagem.leitura_gob && quem && quando) return { origem: "gob", quem, quando };
+
+  return null;
+}
+
+export const ORIGEM_LEITURA_LABEL: Record<LeituraEfetiva["origem"], string> = {
+  portal: "Lida no portal",
+  gob: "Lida no GOB",
+};
