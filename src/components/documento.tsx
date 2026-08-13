@@ -20,7 +20,15 @@ export const MARCA = {
   cinza: "#EFEFEA",
 } as const;
 
-export type Marca = typeof MARCA;
+export type Marca = {
+  grafite: string;
+  grafiteClaro: string;
+  dourado: string;
+  douradoEscuro: string;
+  douradoSuave: string;
+  creme: string;
+  cinza: string;
+};
 
 /**
  * Paleta do "Levantamento de Débitos": mesmo desenho institucional, nos tons
