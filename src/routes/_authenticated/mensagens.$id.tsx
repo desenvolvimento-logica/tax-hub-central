@@ -22,7 +22,6 @@ import {
   SUB_TIPO_LABEL,
   TIPO_ACAO_LABEL,
   formatarData,
-  statusDaAcao,
   useSessao,
   type Mensagem,
 } from "@/lib/hub";
