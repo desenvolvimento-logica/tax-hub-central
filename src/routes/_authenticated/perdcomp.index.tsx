@@ -1,5 +1,5 @@
 /**
- * PERDCOMP — retoma o sistema já existente (painel externo) dentro do HUB,
+ * PERDCOMP — retoma o sistema já existente (painel externo) dentro do Conecta Tributário,
  * sem exigir novo acesso do colaborador.
  */
 import { createFileRoute } from "@tanstack/react-router";
@@ -37,7 +37,7 @@ function PainelPerdcomp() {
         <div>
           <h1 className="text-xl font-semibold">PERDCOMP</h1>
           <p className="text-sm text-muted-foreground">
-            Painel de acompanhamento das declarações PERDCOMP, exibido aqui dentro do HUB.
+            Painel de acompanhamento das declarações PERDCOMP, exibido aqui dentro do Conecta Tributário.
           </p>
         </div>
         <Button variant="outline" asChild>

@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { title: "Administração — Conecta Tributário" },
       {
         name: "description",
-        content: "Cadastro de sistemas, colaboradores, papéis e regras de visibilidade do HUB.",
+        content: "Cadastro de sistemas, colaboradores, papéis e regras de visibilidade do Conecta Tributário.",
       },
       { property: "og:title", content: "Administração — Conecta Tributário" },
       { property: "og:description", content: "Gestão de sistemas, usuários e papéis do departamento." },
@@ -67,7 +67,7 @@ function AdminPage() {
       <header className="mb-6">
         <h1 className="text-2xl font-semibold">Administração</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Sistemas do HUB, colaboradores, papéis e visibilidade.
+          Sistemas do Conecta Tributário, colaboradores, papéis e visibilidade.
         </p>
       </header>
 

@@ -79,7 +79,7 @@ function Portal() {
           <h2 className="text-lg font-semibold">Nenhum sistema liberado</h2>
           <p className="max-w-lg text-sm text-muted-foreground">
             Seu usuário ainda não possui papel com acesso a sistemas. Entre em contato com o
-            administrador do HUB para liberar o acesso.
+            administrador do Conecta Tributário para liberar o acesso.
           </p>
         </div>
       ) : (

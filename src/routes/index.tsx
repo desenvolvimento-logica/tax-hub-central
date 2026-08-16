@@ -61,7 +61,7 @@ function Landing() {
               Um só acesso para todos os sistemas do departamento tributário.
             </h1>
             <p className="text-lg text-primary-foreground/80">
-              O HUB autentica o colaborador, mostra os sistemas liberados para o seu perfil e
+              O Conecta Tributário autentica o colaborador, mostra os sistemas liberados para o seu perfil e
               direciona para cada aplicação — PERDCOMP, Acompanhamento de Mensagens e-CAC (GOB) e os
               próximos que vierem.
             </p>

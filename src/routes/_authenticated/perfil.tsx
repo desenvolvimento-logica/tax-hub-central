@@ -99,7 +99,7 @@ function PerfilPage() {
         <h2 className="text-lg font-semibold">Papéis atribuídos</h2>
         {(sessao?.papeis ?? []).length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nenhum papel atribuído. Solicite liberação ao administrador do HUB.
+            Nenhum papel atribuído. Solicite liberação ao administrador do Conecta Tributário.
           </p>
         ) : (
           <div className="flex flex-wrap gap-2">
