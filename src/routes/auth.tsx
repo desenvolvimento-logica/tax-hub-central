@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Building2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+
+import lampada from "@/assets/lampada-logica.png";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";

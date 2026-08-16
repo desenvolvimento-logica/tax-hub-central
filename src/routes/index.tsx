@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Building2, KeyRound, LayoutGrid, ShieldCheck } from "lucide-react";
+import { ArrowRight, KeyRound, LayoutGrid, ShieldCheck } from "lucide-react";
+
+import lampada from "@/assets/lampada-logica.png";
 
 import { Button } from "@/components/ui/button";
 

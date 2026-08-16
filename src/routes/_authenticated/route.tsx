@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import lampada from "@/assets/lampada-logica.png";
 import {
-  Building2,
   FileStack,
   LayoutGrid,
   LogOut,
