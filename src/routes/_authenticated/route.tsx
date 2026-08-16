@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import lampada from "@/assets/lampada-logica.png";
+import lampada from "@/assets/lampada-logica.png.asset.json";
 import {
   FileStack,
   LayoutGrid,
@@ -56,7 +56,7 @@ function AppShell() {
       <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
         <Link to="/portal" className="flex items-center gap-3 px-5 py-6">
           <span className="flex size-9 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-            <img src={lampada} alt="Símbolo Lógica" className="size-5 object-contain" />
+            <img src={lampada.url} alt="Símbolo Lógica" className="size-5 object-contain" />
           </span>
           <span className="font-display text-xs font-semibold uppercase tracking-[0.16em]">
             Conecta Tributário

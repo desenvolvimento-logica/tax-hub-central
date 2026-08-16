@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-import lampada from "@/assets/lampada-logica.png";
+import lampada from "@/assets/lampada-logica.png.asset.json";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -114,7 +114,7 @@ function AuthPage() {
       <div className="brand-gradient hidden flex-col justify-between p-12 text-primary-foreground lg:flex">
         <Link to="/" className="flex items-center gap-3">
           <span className="flex size-10 items-center justify-center rounded-md bg-primary-foreground/15">
-            <img src={lampada} alt="Símbolo Lógica" className="size-6 object-contain" />
+            <img src={lampada.url} alt="Símbolo Lógica" className="size-6 object-contain" />
           </span>
           <span className="font-display text-sm font-semibold uppercase tracking-[0.18em]">
             Conecta Tributário
