@@ -11,12 +11,12 @@ import { useSessao, type Sistema } from "@/lib/hub";
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => ({
     meta: [
-      { title: "Portal de sistemas — HUB Tributário" },
+      { title: "Portal de sistemas — Conecta Tributário" },
       {
         name: "description",
         content: "Sistemas do departamento tributário liberados para o seu perfil de acesso.",
       },
-      { property: "og:title", content: "Portal de sistemas — HUB Tributário" },
+      { property: "og:title", content: "Portal de sistemas — Conecta Tributário" },
       { property: "og:description", content: "Acesse PERDCOMP e e-CAC/GOB a partir de um único portal." },
     ],
   }),

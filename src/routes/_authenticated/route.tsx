@@ -59,7 +59,7 @@ function AppShell() {
             <Building2 className="size-4" />
           </span>
           <span className="font-display text-xs font-semibold uppercase tracking-[0.16em]">
-            HUB Tributário
+            Conecta Tributário
           </span>
         </Link>
 
@@ -110,7 +110,7 @@ function AppShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-5 py-3 md:hidden">
           <Link to="/portal" className="font-display text-sm font-semibold uppercase tracking-[0.14em]">
-            HUB Tributário
+            Conecta Tributário
           </Link>
           <Button variant="ghost" size="sm" onClick={sair}>
             <LogOut className="size-4" />

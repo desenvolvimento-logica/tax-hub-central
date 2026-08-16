@@ -12,16 +12,16 @@ const PAINEL_URL = "https://perdcomp-pilot.lovable.app/painel";
 export const Route = createFileRoute("/_authenticated/perdcomp/")({
   head: () => ({
     meta: [
-      { title: "PERDCOMP — HUB Tributário" },
+      { title: "PERDCOMP — Conecta Tributário" },
       {
         name: "description",
         content:
-          "Painel PERDCOMP disponível dentro do HUB Tributário: acompanhamento das declarações, prazos e situações.",
+          "Painel PERDCOMP disponível dentro do Conecta Tributário: acompanhamento das declarações, prazos e situações.",
       },
-      { property: "og:title", content: "PERDCOMP — HUB Tributário" },
+      { property: "og:title", content: "PERDCOMP — Conecta Tributário" },
       {
         property: "og:description",
-        content: "Painel de acompanhamento das declarações PERDCOMP dentro do HUB Tributário.",
+        content: "Painel de acompanhamento das declarações PERDCOMP dentro do Conecta Tributário.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

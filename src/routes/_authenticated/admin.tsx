@@ -34,12 +34,12 @@ import { useSessao, type Papel, type Perfil, type Sistema } from "@/lib/hub";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Administração — HUB Tributário" },
+      { title: "Administração — Conecta Tributário" },
       {
         name: "description",
         content: "Cadastro de sistemas, colaboradores, papéis e regras de visibilidade do HUB.",
       },
-      { property: "og:title", content: "Administração — HUB Tributário" },
+      { property: "og:title", content: "Administração — Conecta Tributário" },
       { property: "og:description", content: "Gestão de sistemas, usuários e papéis do departamento." },
     ],
   }),

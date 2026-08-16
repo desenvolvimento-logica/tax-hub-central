@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "HUB Tributário — Portal do Departamento Tributário" },
+      { title: "Conecta Tributário — Portal do Departamento Tributário" },
       {
         name: "description",
         content:
           "Porta de entrada única do departamento tributário: acesso ao PERDCOMP e ao Acompanhamento de Mensagens e-CAC (GOB) com login e permissões compartilhadas.",
       },
-      { property: "og:title", content: "HUB Tributário — Portal do Departamento Tributário" },
+      { property: "og:title", content: "Conecta Tributário — Portal do Departamento Tributário" },
       {
         property: "og:description",
         content: "Login único, cards por sistema e controle de acesso por papel para o time tributário.",
@@ -50,7 +50,7 @@ function Landing() {
               <Building2 className="size-5" />
             </span>
             <span className="font-display text-sm font-semibold uppercase tracking-[0.18em]">
-              HUB Tributário
+              Conecta Tributário
             </span>
           </div>
 

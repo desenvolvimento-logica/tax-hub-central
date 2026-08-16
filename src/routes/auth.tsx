@@ -17,12 +17,12 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Entrar — HUB Tributário" },
+      { title: "Entrar — Conecta Tributário" },
       {
         name: "description",
         content: "Acesse o portal do departamento tributário com e-mail e senha ou conta Google corporativa.",
       },
-      { property: "og:title", content: "Entrar — HUB Tributário" },
+      { property: "og:title", content: "Entrar — Conecta Tributário" },
       { property: "og:description", content: "Login único do departamento tributário." },
     ],
   }),
@@ -115,7 +115,7 @@ function AuthPage() {
             <Building2 className="size-5" />
           </span>
           <span className="font-display text-sm font-semibold uppercase tracking-[0.18em]">
-            HUB Tributário
+            Conecta Tributário
           </span>
         </Link>
         <div className="max-w-md space-y-4">

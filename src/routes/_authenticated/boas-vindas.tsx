@@ -17,13 +17,13 @@ import pagina2 from "@/assets/bv-original-p2.jpg.asset.json";
 export const Route = createFileRoute("/_authenticated/boas-vindas")({
   head: () => ({
     meta: [
-      { title: "Comunicado boas-vindas — HUB Tributário" },
+      { title: "Comunicado boas-vindas — Conecta Tributário" },
       {
         name: "description",
         content:
           "Gere o comunicado de boas-vindas do departamento tributário informando o nome da empresa e do colaborador responsável.",
       },
-      { property: "og:title", content: "Comunicado boas-vindas — HUB Tributário" },
+      { property: "og:title", content: "Comunicado boas-vindas — Conecta Tributário" },
       {
         property: "og:description",
         content:
