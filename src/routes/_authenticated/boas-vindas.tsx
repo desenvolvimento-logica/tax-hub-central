@@ -92,7 +92,7 @@ function BoasVindas() {
         .bv-page { position: relative; width: min(794px, 100%); aspect-ratio: 210 / 297; background: #fff; box-shadow: 0 12px 35px rgba(21,29,42,.16); overflow: hidden; }
         .bv-page > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; display: block; }
         .bv-cliente { position: absolute; left: 12.6%; top: 25.9%; width: 74.8%; height: 6.4%; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 800; font-family: Arial, Helvetica, sans-serif; line-height: 1; white-space: nowrap; color: #000; overflow: hidden; }
-        .bv-colaborador { position: absolute; left: 60%; top: 47.14%; width: 24.7%; height: 2.45%; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 700; font-family: Arial, Helvetica, sans-serif; line-height: 1; white-space: nowrap; color: #000; overflow: hidden; }
+        .bv-colaborador { position: absolute; left: 60%; top: 47.14%; width: 24.7%; height: 2.45%; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; margin: 0; font-weight: 700; font-family: Arial, Helvetica, sans-serif; line-height: 1; white-space: nowrap; color: #000; overflow: hidden; }
         .bv-vazio { color: #9aa0aa; opacity: .72; }
         @media print {
           @page { size: A4; margin: 0; }
