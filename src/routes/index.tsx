@@ -58,12 +58,11 @@ function Landing() {
 
           <div className="max-w-2xl space-y-5">
             <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
-              Um só acesso para todos os sistemas do departamento tributário.
+              Bem-vindo ao Portal do Departamento Tributário.
             </h1>
             <p className="text-lg text-primary-foreground/80">
-              O Conecta Tributário autentica o colaborador, mostra os sistemas liberados para o seu perfil e
-              direciona para cada aplicação — PERDCOMP, Acompanhamento de Mensagens e-CAC (GOB) e os
-              próximos que vierem.
+              Um ambiente centralizado para facilitar o acesso aos sistemas, ferramentas e informações que
+              fazem parte da nossa rotina.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <Button asChild size="lg" variant="secondary">
