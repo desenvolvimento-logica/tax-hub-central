@@ -112,7 +112,7 @@ function AuthPage() {
       <div className="brand-gradient hidden flex-col justify-between p-12 text-primary-foreground lg:flex">
         <Link to="/" className="flex items-center gap-3">
           <span className="flex size-10 items-center justify-center rounded-md bg-primary-foreground/15">
-            <Building2 className="size-5" />
+            <img src={lampada} alt="Símbolo Lógica" className="size-6 object-contain" />
           </span>
           <span className="font-display text-sm font-semibold uppercase tracking-[0.18em]">
             Conecta Tributário
@@ -120,11 +120,11 @@ function AuthPage() {
         </Link>
         <div className="max-w-md space-y-4">
           <h1 className="text-3xl font-semibold leading-tight">
-            Porta de entrada do departamento tributário
+            Bem-vindo ao Portal do Departamento Tributário
           </h1>
           <p className="text-primary-foreground/80">
-            Autentique-se uma única vez e acesse o PERDCOMP, o Acompanhamento de Mensagens e-CAC
-            (GOB) e os demais sistemas liberados para o seu perfil.
+            Um ambiente centralizado para facilitar o acesso aos sistemas, ferramentas e informações
+            que fazem parte da nossa rotina.
           </p>
         </div>
         <p className="text-xs text-primary-foreground/60">Acesso restrito a colaboradores.</p>

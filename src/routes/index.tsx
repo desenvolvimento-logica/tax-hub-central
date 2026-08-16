@@ -47,7 +47,7 @@ function Landing() {
         <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-20 text-primary-foreground md:py-28">
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-md bg-primary-foreground/15">
-              <Building2 className="size-5" />
+              <img src={lampada} alt="Símbolo Lógica" className="size-6 object-contain" />
             </span>
             <span className="font-display text-sm font-semibold uppercase tracking-[0.18em]">
               Conecta Tributário
