@@ -11,12 +11,12 @@ import { useSessao, type Sistema } from "@/lib/hub";
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => ({
     meta: [
-      { title: "Portal de sistemas — HUB Tributário" },
+      { title: "Portal de sistemas — Conecta Tributário" },
       {
         name: "description",
         content: "Sistemas do departamento tributário liberados para o seu perfil de acesso.",
       },
-      { property: "og:title", content: "Portal de sistemas — HUB Tributário" },
+      { property: "og:title", content: "Portal de sistemas — Conecta Tributário" },
       { property: "og:description", content: "Acesse PERDCOMP e e-CAC/GOB a partir de um único portal." },
     ],
   }),
@@ -79,7 +79,7 @@ function Portal() {
           <h2 className="text-lg font-semibold">Nenhum sistema liberado</h2>
           <p className="max-w-lg text-sm text-muted-foreground">
             Seu usuário ainda não possui papel com acesso a sistemas. Entre em contato com o
-            administrador do HUB para liberar o acesso.
+            administrador do Conecta Tributário para liberar o acesso.
           </p>
         </div>
       ) : (

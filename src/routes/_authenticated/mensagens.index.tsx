@@ -40,13 +40,13 @@ import { sincronizarGob } from "@/lib/gob.functions";
 export const Route = createFileRoute("/_authenticated/mensagens/")({
   head: () => ({
     meta: [
-      { title: "Caixa Postal e-CAC — HUB Tributário" },
+      { title: "Caixa Postal e-CAC — Conecta Tributário" },
       {
         name: "description",
         content:
           "Caixa Postal e-CAC replicada do GOB: mesmos campos e filtros, com primeira leitura pendente até a visualização de um colaborador.",
       },
-      { property: "og:title", content: "Caixa Postal e-CAC — HUB Tributário" },
+      { property: "og:title", content: "Caixa Postal e-CAC — Conecta Tributário" },
       {
         property: "og:description",
         content: "Mensagens do e-CAC sincronizadas do GOB, com registro de leitura humana.",
@@ -164,7 +164,7 @@ function ListaMensagens() {
       if (ni && !`${m.ni ?? ""} ${m.cnpj_contribuinte} ${m.nome_contribuinte}`.toLowerCase().includes(ni.toLowerCase()))
         return false;
       if (!simNao(ativo, m.ativo)) return false;
-      // "Lida" no HUB = leitura efetiva por um colaborador, não a leitura do GOB.
+      // "Lida" no Conecta Tributário = leitura efetiva por um colaborador, não a leitura do GOB.
       if (!simNao(lida, Boolean(leituraHumana))) return false;
       if (!simNao(arquivada, m.arquivada)) return false;
       if (assunto && !m.assunto.toLowerCase().includes(assunto.toLowerCase())) return false;

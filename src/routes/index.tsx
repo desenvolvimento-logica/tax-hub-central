@@ -1,18 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Building2, KeyRound, LayoutGrid, ShieldCheck } from "lucide-react";
+import { ArrowRight, KeyRound, LayoutGrid, ShieldCheck } from "lucide-react";
+
+import lampada from "@/assets/lampada-logica.png";
 
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "HUB Tributário — Portal do Departamento Tributário" },
+      { title: "Conecta Tributário — Portal do Departamento Tributário" },
       {
         name: "description",
         content:
           "Porta de entrada única do departamento tributário: acesso ao PERDCOMP e ao Acompanhamento de Mensagens e-CAC (GOB) com login e permissões compartilhadas.",
       },
-      { property: "og:title", content: "HUB Tributário — Portal do Departamento Tributário" },
+      { property: "og:title", content: "Conecta Tributário — Portal do Departamento Tributário" },
       {
         property: "og:description",
         content: "Login único, cards por sistema e controle de acesso por papel para o time tributário.",
@@ -47,10 +49,10 @@ function Landing() {
         <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-20 text-primary-foreground md:py-28">
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-md bg-primary-foreground/15">
-              <Building2 className="size-5" />
+              <img src={lampada} alt="Símbolo Lógica" className="size-6 object-contain" />
             </span>
             <span className="font-display text-sm font-semibold uppercase tracking-[0.18em]">
-              HUB Tributário
+              Conecta Tributário
             </span>
           </div>
 
@@ -59,7 +61,7 @@ function Landing() {
               Um só acesso para todos os sistemas do departamento tributário.
             </h1>
             <p className="text-lg text-primary-foreground/80">
-              O HUB autentica o colaborador, mostra os sistemas liberados para o seu perfil e
+              O Conecta Tributário autentica o colaborador, mostra os sistemas liberados para o seu perfil e
               direciona para cada aplicação — PERDCOMP, Acompanhamento de Mensagens e-CAC (GOB) e os
               próximos que vierem.
             </p>

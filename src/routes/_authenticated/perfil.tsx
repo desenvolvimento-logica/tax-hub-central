@@ -13,10 +13,10 @@ import { useSessao, sessaoQueryKey, formatarData } from "@/lib/hub";
 export const Route = createFileRoute("/_authenticated/perfil")({
   head: () => ({
     meta: [
-      { title: "Meu perfil — HUB Tributário" },
+      { title: "Meu perfil — Conecta Tributário" },
       { name: "description", content: "Dados do colaborador, papéis atribuídos e troca de senha." },
-      { property: "og:title", content: "Meu perfil — HUB Tributário" },
-      { property: "og:description", content: "Gerencie seus dados de acesso ao HUB Tributário." },
+      { property: "og:title", content: "Meu perfil — Conecta Tributário" },
+      { property: "og:description", content: "Gerencie seus dados de acesso ao Conecta Tributário." },
     ],
   }),
   component: PerfilPage,
@@ -99,7 +99,7 @@ function PerfilPage() {
         <h2 className="text-lg font-semibold">Papéis atribuídos</h2>
         {(sessao?.papeis ?? []).length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nenhum papel atribuído. Solicite liberação ao administrador do HUB.
+            Nenhum papel atribuído. Solicite liberação ao administrador do Conecta Tributário.
           </p>
         ) : (
           <div className="flex flex-wrap gap-2">

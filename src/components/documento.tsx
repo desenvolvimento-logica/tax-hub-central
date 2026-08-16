@@ -1,5 +1,5 @@
 /**
- * Peças visuais compartilhadas dos documentos institucionais gerados no HUB
+ * Peças visuais compartilhadas dos documentos institucionais gerados no Conecta Tributário
  * (comunicado de boas-vindas e diagnóstico fiscal).
  *
  * Os documentos seguem a identidade da Lógica: grafite, dourado e creme.

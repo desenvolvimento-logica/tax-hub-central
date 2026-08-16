@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import lampada from "@/assets/lampada-logica.png";
 import {
-  Building2,
   FileStack,
   LayoutGrid,
   LogOut,
@@ -56,10 +56,10 @@ function AppShell() {
       <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
         <Link to="/portal" className="flex items-center gap-3 px-5 py-6">
           <span className="flex size-9 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-            <Building2 className="size-4" />
+            <img src={lampada} alt="Símbolo Lógica" className="size-5 object-contain" />
           </span>
           <span className="font-display text-xs font-semibold uppercase tracking-[0.16em]">
-            HUB Tributário
+            Conecta Tributário
           </span>
         </Link>
 
@@ -110,7 +110,7 @@ function AppShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-5 py-3 md:hidden">
           <Link to="/portal" className="font-display text-sm font-semibold uppercase tracking-[0.14em]">
-            HUB Tributário
+            Conecta Tributário
           </Link>
           <Button variant="ghost" size="sm" onClick={sair}>
             <LogOut className="size-4" />

@@ -38,12 +38,12 @@ import { statusVariant } from "./mensagens.index";
 export const Route = createFileRoute("/_authenticated/mensagens/$id")({
   head: () => ({
     meta: [
-      { title: "Detalhe da mensagem — HUB Tributário" },
+      { title: "Detalhe da mensagem — Conecta Tributário" },
       {
         name: "description",
         content: "Conteúdo integral da mensagem do e-CAC, histórico de visualizações e ações registradas.",
       },
-      { property: "og:title", content: "Detalhe da mensagem — HUB Tributário" },
+      { property: "og:title", content: "Detalhe da mensagem — Conecta Tributário" },
       { property: "og:description", content: "Tratamento e histórico de uma mensagem do e-CAC." },
     ],
   }),
