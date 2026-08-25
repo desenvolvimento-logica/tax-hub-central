@@ -14,6 +14,54 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+const chunkReloadScript = `
+(() => {
+  const reloadKey = "conecta:chunk-reload-attempted";
+  const dynamicImportMessages = [
+    "Failed to fetch dynamically imported module",
+    "Importing a module script failed",
+    "error loading dynamically imported module",
+  ];
+
+  const messageFrom = (value) => {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    if (value.message) return String(value.message);
+    if (value.reason?.message) return String(value.reason.message);
+    if (value.error?.message) return String(value.error.message);
+    return "";
+  };
+
+  const shouldReload = (value) => {
+    const message = messageFrom(value);
+    return dynamicImportMessages.some((item) => message.includes(item));
+  };
+
+  const reloadOnce = () => {
+    if (sessionStorage.getItem(reloadKey) === "1") return;
+    sessionStorage.setItem(reloadKey, "1");
+    window.location.reload();
+  };
+
+  window.addEventListener("vite:preloadError", (event) => {
+    event.preventDefault();
+    reloadOnce();
+  });
+
+  window.addEventListener("unhandledrejection", (event) => {
+    if (shouldReload(event)) reloadOnce();
+  });
+
+  window.addEventListener("error", (event) => {
+    if (shouldReload(event)) reloadOnce();
+  });
+
+  window.addEventListener("load", () => {
+    window.setTimeout(() => sessionStorage.removeItem(reloadKey), 5000);
+  });
+})();
+`;
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -109,6 +157,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: chunkReloadScript }} />
         <HeadContent />
       </head>
       <body>
