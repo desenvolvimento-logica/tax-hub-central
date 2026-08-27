@@ -81,6 +81,7 @@ function simNao(valor: string, alvo: boolean): boolean {
 function ListaMensagens() {
   const queryClient = useQueryClient();
   const sincronizar = useServerFn(sincronizarGob);
+  const sincronizarAuto = useServerFn(sincronizarGobAuto);
 
   const [tipo, setTipo] = useState(TODOS);
   const [ni, setNi] = useState("");
