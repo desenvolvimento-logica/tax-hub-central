@@ -37,11 +37,6 @@ function PainelPerdcomp() {
             Painel de acompanhamento das declarações PERDCOMP, exibido aqui dentro do Conecta Tributário.
           </p>
         </div>
-        <Button variant="outline" asChild>
-          <a href={PAINEL_URL} target="_blank" rel="noreferrer">
-            <ExternalLink className="mr-2 size-4" /> Abrir em nova aba
-          </a>
-        </Button>
       </div>
 
       <div className="flex-1 overflow-hidden rounded-lg border bg-card">
