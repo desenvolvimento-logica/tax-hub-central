@@ -86,7 +86,8 @@ function Portal() {
         <div className="grid gap-5 sm:grid-cols-2">
           {(sistemas ?? []).map((sistema) => {
             const Icone = ICONES[sistema.icone] ?? LayoutGrid;
-            const interno = sistema.url.startsWith("/");
+            const url = rotaInterna(sistema.url);
+            const interno = url.startsWith("/");
             return (
               <article key={sistema.id} className="surface-panel flex flex-col p-6">
                 <div className="flex items-start justify-between gap-3">
