@@ -37,7 +37,11 @@ function AuthPage() {
   const { redirect } = useSearch({ from: "/auth" });
   const destino = redirect && redirect.startsWith("/") ? redirect : "/portal";
 
-  const [verificandoHub, setVerificandoHub] = useState(true);
+  const [verificandoHub, setVerificandoHub] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const q = window.location.search + window.location.hash;
+    return q.includes("access_token") || q.includes("sso_token") || q.includes("code=");
+  });
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [entrando, setEntrando] = useState(false);
