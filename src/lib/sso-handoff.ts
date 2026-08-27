@@ -65,3 +65,62 @@ export function irParaHub(destino: string) {
   url.searchParams.set("redirect_uri", retorno.toString());
   window.location.assign(url.toString());
 }
+
+// --- Handoff via postMessage (app embarcado no hub) -------------------------
+
+let instalado = false;
+let resolverSessao: (() => void) | undefined;
+const sessaoDoHub = new Promise<void>((r) => {
+  resolverSessao = r;
+});
+
+/**
+ * Instala o listener de sessão do hub o mais cedo possível (antes de qualquer
+ * redirecionamento de autenticação). Idempotente.
+ */
+export function instalarListenerDoHub() {
+  if (typeof window === "undefined" || instalado) return;
+  instalado = true;
+
+  window.addEventListener("message", (event: MessageEvent) => {
+    if (event.origin !== HUB_URL) return;
+    const dados = event.data as
+      | { type?: string; access_token?: string; refresh_token?: string }
+      | undefined;
+    if (dados?.type !== "LUZIA_SESSION") return;
+    if (!dados.access_token || !dados.refresh_token) return;
+
+    void supabase.auth
+      .setSession({
+        access_token: dados.access_token,
+        refresh_token: dados.refresh_token,
+      })
+      .then(({ error }) => {
+        if (!error) resolverSessao?.();
+      });
+  });
+
+  // Avisa o hub que já estamos prontos para receber a sessão.
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: "LUZIA_SESSION_REQUEST" }, HUB_URL);
+    }
+    if (window.opener) {
+      window.opener.postMessage({ type: "LUZIA_SESSION_REQUEST" }, HUB_URL);
+    }
+  } catch {
+    // origem bloqueada — o hub pode enviar a sessão espontaneamente.
+  }
+}
+
+/** Aguarda (com timeout curto) a sessão chegar por postMessage do hub. */
+export async function esperarSessaoDoHub(ms = 1200): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  if (!(window.parent && window.parent !== window) && !window.opener) return false;
+  let concluido = false;
+  const espera = sessaoDoHub.then(() => {
+    concluido = true;
+  });
+  await Promise.race([espera, new Promise((r) => setTimeout(r, ms))]);
+  return concluido;
+}

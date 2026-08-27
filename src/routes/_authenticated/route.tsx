@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/escritorio/client";
-import { consumirTokenDoHub } from "@/lib/sso-handoff";
+import { consumirTokenDoHub, esperarSessaoDoHub } from "@/lib/sso-handoff";
 import { Button } from "@/components/ui/button";
 import { useSessao, iniciais } from "@/lib/hub";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,13 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
     // Token vindo do hub (Luz.IA) cria a sessão automaticamente.
     await consumirTokenDoHub();
-    const { data, error } = await supabase.auth.getUser();
+    let { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      // Pode estar embarcado no hub: aguarda a sessão via postMessage.
+      if (await esperarSessaoDoHub()) {
+        ({ data, error } = await supabase.auth.getUser());
+      }
+    }
     if (error || !data.user) {
       throw redirect({ to: "/auth", search: { redirect: location.href } });
     }
@@ -30,6 +36,7 @@ export const Route = createFileRoute("/_authenticated")({
   },
   component: AppShell,
 });
+
 
 const NAV = [
   { to: "/portal", label: "Portal", icon: LayoutGrid, admin: false },
