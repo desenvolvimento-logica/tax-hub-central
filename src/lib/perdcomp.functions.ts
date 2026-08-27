@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireEscritorioAuth as requireSupabaseAuth } from "@/integrations/escritorio/auth-middleware";
 
 export type Declaracao = {
   id: string;
@@ -236,7 +236,7 @@ export const salvarAcompanhamento = createServerFn({ method: "POST" })
   .inputValidator((d: EntradaAcompanhamento) => esquemaAcompanhamento.parse(d))
   .handler(async ({ data, context }) => {
     const { diferencas } = await import("@/lib/perdcomp.log");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/integrations/escritorio/client.server");
 
     const { data: perfil } = await context.supabase
       .from("perfis")
@@ -297,7 +297,7 @@ export const revisarAchado = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/integrations/escritorio/client.server");
     const { data: perfil } = await context.supabase
       .from("perfis")
       .select("id")
@@ -315,7 +315,7 @@ export const resolverAlerta = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/integrations/escritorio/client.server");
     const { data: perfil } = await context.supabase
       .from("perfis")
       .select("id")

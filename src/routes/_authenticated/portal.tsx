@@ -5,7 +5,7 @@ import { ClipboardList, ExternalLink, FileStack, LayoutGrid, MailCheck, ShieldAl
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/escritorio/client";
 import { useSessao, type Sistema } from "@/lib/hub";
 
 export const Route = createFileRoute("/_authenticated/portal")({
