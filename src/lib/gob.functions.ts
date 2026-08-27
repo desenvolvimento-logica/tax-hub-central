@@ -4,104 +4,29 @@ import { requireEscritorioAuth as requireSupabaseAuth } from "@/integrations/esc
 import {
   consultarGob,
   credenciaisGob,
-  normalizarCaixaPostal,
   numeroGob as numero,
   textoGob as texto,
 } from "@/lib/gob.server";
+import type { ResultadoSync } from "@/lib/gob-sync.server";
 
-export type ResultadoSync = {
-  ok: boolean;
-  novas: number;
-  atualizadas: number;
-  total?: number;
-  erro?: string;
-};
+export type { ResultadoSync };
 
+/** Sincronização manual (botão) — ignora o intervalo mínimo. */
 export const sincronizarGob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async (): Promise<ResultadoSync> => {
-    if (!credenciaisGob()) {
-      return {
-        ok: false,
-        novas: 0,
-        atualizadas: 0,
-        erro: "Chave da API do GOB não configurada no portal.",
-      };
-    }
-
-    const { supabaseAdmin } = await import("@/integrations/escritorio/client.server");
-    const { data: registro } = await supabaseAdmin
-      .from("sincronizacoes_gob")
-      .insert({ situacao: "executando" })
-      .select("id")
-      .single();
-
-    try {
-      const PAGINA = 200;
-      const MAX_PAGINAS = 15;
-      let novas = 0;
-      let atualizadas = 0;
-      let total = 0;
-
-      for (let pagina = 0; pagina < MAX_PAGINAS; pagina++) {
-        const { total: totalGob, list } = await consultarGob("CaixaPostalEcac", {
-          maxSize: PAGINA,
-          offset: pagina * PAGINA,
-          orderBy: "dtEnvio",
-          order: "desc",
-        });
-        total = totalGob;
-        if (!list.length) break;
-
-        const normalizadas = list
-          .map(normalizarCaixaPostal)
-          .filter((m): m is ReturnType<typeof normalizarCaixaPostal> & { gob_id: string } =>
-            Boolean(m.gob_id),
-          );
-        if (!normalizadas.length) continue;
-
-        const ids = normalizadas.map((m) => m.gob_id);
-        const { data: existentes } = await supabaseAdmin
-          .from("mensagens")
-          .select("gob_id")
-          .in("gob_id", ids);
-        const jaExistem = new Set((existentes ?? []).map((e) => e.gob_id));
-
-        const { error } = await supabaseAdmin
-          .from("mensagens")
-          .upsert(normalizadas, { onConflict: "gob_id" });
-        if (error) throw new Error(error.message);
-
-        novas += normalizadas.filter((m) => !jaExistem.has(m.gob_id)).length;
-        atualizadas += normalizadas.filter((m) => jaExistem.has(m.gob_id)).length;
-
-        if (list.length < PAGINA) break;
-      }
-
-      if (registro?.id) {
-        await supabaseAdmin
-          .from("sincronizacoes_gob")
-          .update({
-            situacao: "concluida",
-            concluido_em: new Date().toISOString(),
-            novas,
-            atualizadas,
-          })
-          .eq("id", registro.id);
-      }
-
-      return { ok: true, novas, atualizadas, total };
-    } catch (e) {
-      const erro = e instanceof Error ? e.message : String(e);
-      if (registro?.id) {
-        await supabaseAdmin
-          .from("sincronizacoes_gob")
-          .update({ situacao: "erro", erro, concluido_em: new Date().toISOString() })
-          .eq("id", registro.id);
-      }
-      return { ok: false, novas: 0, atualizadas: 0, erro };
-    }
+    const { executarSyncGob } = await import("@/lib/gob-sync.server");
+    return executarSyncGob({ forcar: true });
   });
+
+/** Sincronização automática ao abrir a caixa postal — respeita o intervalo mínimo. */
+export const sincronizarGobAuto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async (): Promise<ResultadoSync> => {
+    const { executarSyncGob } = await import("@/lib/gob-sync.server");
+    return executarSyncGob();
+  });
+
 
 export type ItemPerdcomp = {
   id: string;
