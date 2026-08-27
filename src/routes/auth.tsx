@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/escritorio/client";
-import { consumirTokenDoHub, irParaHub } from "@/lib/sso-handoff";
+import { consumirTokenDoHub } from "@/lib/sso-handoff";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
@@ -37,7 +37,6 @@ function AuthPage() {
   const { redirect } = useSearch({ from: "/auth" });
   const destino = redirect && redirect.startsWith("/") ? redirect : "/portal";
 
-  const [carregando, setCarregando] = useState(false);
   const [verificandoHub, setVerificandoHub] = useState(true);
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -94,48 +93,6 @@ function AuthPage() {
     };
   }, [navigate, destino]);
 
-  async function entrarComMicrosoft() {
-    setCarregando(true);
-    const retorno = new URL("/auth", window.location.origin);
-    if (redirect && redirect.startsWith("/")) retorno.searchParams.set("redirect", redirect);
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "azure",
-      options: {
-        redirectTo: retorno.toString(),
-        scopes: "openid profile email offline_access",
-        skipBrowserRedirect: true,
-      },
-    });
-
-    if (error || !data?.url) {
-      setCarregando(false);
-      toast.error("Falha no login Microsoft", { description: error?.message ?? "URL inválida" });
-      return;
-    }
-
-    // A Microsoft bloqueia exibição em iframe: o fluxo precisa de janela própria.
-    const popup = window.open(data.url, "sso-microsoft", "width=520,height=680");
-    if (!popup) {
-      window.location.assign(data.url);
-      return;
-    }
-
-    const timer = window.setInterval(async () => {
-      const { data: sessao } = await supabase.auth.getSession();
-      if (sessao.session) {
-        window.clearInterval(timer);
-        setCarregando(false);
-        popup.close();
-        navigate({ to: destino, replace: true });
-        return;
-      }
-      if (popup.closed) {
-        window.clearInterval(timer);
-        setCarregando(false);
-      }
-    }, 800);
-  }
 
 
   return (
