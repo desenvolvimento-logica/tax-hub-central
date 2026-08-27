@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/escritorio/client";
 import {
   STATUS_LABEL,
   SUB_TIPO_LABEL,

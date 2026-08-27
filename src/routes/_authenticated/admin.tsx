@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/escritorio/client";
 import { useSessao, type Papel, type Perfil, type Sistema } from "@/lib/hub";
 
 export const Route = createFileRoute("/_authenticated/admin")({

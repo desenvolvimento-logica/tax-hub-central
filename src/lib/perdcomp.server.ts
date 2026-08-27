@@ -160,7 +160,7 @@ export async function buscarPerdcomps(limite = 3000): Promise<RegistroGob[]> {
 }
 
 export async function sincronizarComGob(limite = 3000): Promise<ResultadoSyncPerdcomp> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("@/integrations/escritorio/client.server");
   const registros = await buscarPerdcomps(limite);
 
   let novas = 0;
@@ -319,7 +319,7 @@ export async function lerResponsavelDoPdf(base64: string): Promise<Responsavel> 
 }
 
 export async function sincronizarResponsavel(declaracaoId: string): Promise<Responsavel> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("@/integrations/escritorio/client.server");
   const { data: dec } = await supabaseAdmin
     .from("declaracoes")
     .select("id, arquivo_documento_id, arquivo_recibo_id")
@@ -350,7 +350,7 @@ export async function extrairResponsaveisPendentes(limite = 150): Promise<{
   processadas: number;
   encontrados: number;
 }> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("@/integrations/escritorio/client.server");
   const { data } = await supabaseAdmin
     .from("declaracoes")
     .select("id")

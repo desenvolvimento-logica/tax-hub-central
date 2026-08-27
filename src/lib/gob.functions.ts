@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireEscritorioAuth as requireSupabaseAuth } from "@/integrations/escritorio/auth-middleware";
 import {
   consultarGob,
   credenciaisGob,
@@ -29,7 +29,7 @@ export const sincronizarGob = createServerFn({ method: "POST" })
       };
     }
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/integrations/escritorio/client.server");
     const { data: registro } = await supabaseAdmin
       .from("sincronizacoes_gob")
       .insert({ situacao: "executando" })

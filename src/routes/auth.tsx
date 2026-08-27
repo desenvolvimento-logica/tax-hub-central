@@ -1,17 +1,12 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-
-import lampada from "@/assets/lampada-logica.png.asset.json";
 import { z } from "zod";
 
+import lampada from "@/assets/lampada-logica.png.asset.json";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/escritorio/client";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
@@ -22,10 +17,13 @@ export const Route = createFileRoute("/auth")({
       { title: "Entrar — Conecta Tributário" },
       {
         name: "description",
-        content: "Acesse o portal do departamento tributário com e-mail e senha ou conta Google corporativa.",
+        content:
+          "Acesse o portal do departamento tributário com a conta Microsoft corporativa do escritório.",
       },
       { property: "og:title", content: "Entrar — Conecta Tributário" },
       { property: "og:description", content: "Login único do departamento tributário." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AuthPage,
@@ -36,77 +34,39 @@ function AuthPage() {
   const { redirect } = useSearch({ from: "/auth" });
   const destino = redirect && redirect.startsWith("/") ? redirect : "/portal";
 
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [nome, setNome] = useState("");
-  const [cargo, setCargo] = useState("");
   const [carregando, setCarregando] = useState(false);
 
-  async function entrar(e: React.FormEvent) {
-    e.preventDefault();
-    setCarregando(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
-    setCarregando(false);
-    if (error) {
-      toast.error("Não foi possível entrar", { description: error.message });
-      return;
-    }
-    navigate({ to: destino });
-  }
+  useEffect(() => {
+    let ativo = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (ativo && data.session) navigate({ to: destino, replace: true });
+    });
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) navigate({ to: destino, replace: true });
+    });
+    return () => {
+      ativo = false;
+      data.subscription.unsubscribe();
+    };
+  }, [navigate, destino]);
 
-  async function cadastrar(e: React.FormEvent) {
-    e.preventDefault();
+  async function entrarComMicrosoft() {
     setCarregando(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password: senha,
+    const retorno = new URL("/auth", window.location.origin);
+    if (redirect && redirect.startsWith("/")) retorno.searchParams.set("redirect", redirect);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "azure",
       options: {
-        emailRedirectTo: window.location.origin,
-        data: { nome_completo: nome, cargo },
+        redirectTo: retorno.toString(),
+        scopes: "openid profile email offline_access",
       },
     });
-    setCarregando(false);
-    if (error) {
-      toast.error("Não foi possível criar a conta", { description: error.message });
-      return;
-    }
-    if (data.session) {
-      navigate({ to: destino });
-      return;
-    }
-    toast.success("Conta criada", {
-      description: "Confirme o e-mail enviado para concluir o primeiro acesso.",
-    });
-  }
 
-  async function entrarComGoogle() {
-    setCarregando(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
+    if (error) {
       setCarregando(false);
-      toast.error("Falha no login com Google", { description: String(result.error) });
-      return;
+      toast.error("Falha no login Microsoft", { description: error.message });
     }
-    if (result.redirected) return;
-    setCarregando(false);
-    navigate({ to: destino });
-  }
-
-  async function recuperarSenha() {
-    if (!email) {
-      toast.error("Informe o e-mail para receber o link de redefinição.");
-      return;
-    }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) {
-      toast.error("Não foi possível enviar o link", { description: error.message });
-      return;
-    }
-    toast.success("Link enviado", { description: "Verifique sua caixa de entrada." });
   }
 
   return (
@@ -136,108 +96,19 @@ function AuthPage() {
         <div className="w-full max-w-sm">
           <h2 className="text-2xl font-semibold">Acessar o portal</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Use suas credenciais corporativas para continuar.
+            O acesso é feito com a conta Microsoft do escritório (SSO). Não há cadastro de senha
+            neste portal.
           </p>
 
-          <Tabs defaultValue="entrar" className="mt-8">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="entrar">Entrar</TabsTrigger>
-              <TabsTrigger value="criar">Criar conta</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="entrar">
-              <form onSubmit={entrar} className="space-y-4 pt-2">
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="senha">Senha</Label>
-                  <Input
-                    id="senha"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={carregando}>
-                  {carregando && <Loader2 className="size-4 animate-spin" />}
-                  Entrar
-                </Button>
-                <button
-                  type="button"
-                  onClick={recuperarSenha}
-                  className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-                >
-                  Esqueci minha senha
-                </button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="criar">
-              <form onSubmit={cadastrar} className="space-y-4 pt-2">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome completo</Label>
-                  <Input id="nome" required value={nome} onChange={(e) => setNome(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cargo">Cargo</Label>
-                  <Input
-                    id="cargo"
-                    placeholder="Analista, Coordenador…"
-                    value={cargo}
-                    onChange={(e) => setCargo(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email-novo">E-mail corporativo</Label>
-                  <Input
-                    id="email-novo"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="senha-nova">Senha</Label>
-                  <Input
-                    id="senha-nova"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    minLength={6}
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={carregando}>
-                  {carregando && <Loader2 className="size-4 animate-spin" />}
-                  Criar conta
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-
-          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />
-            ou
-            <span className="h-px flex-1 bg-border" />
-          </div>
-
-          <Button variant="outline" className="w-full" onClick={entrarComGoogle} disabled={carregando}>
-            Continuar com Google
+          <Button className="mt-8 w-full" onClick={entrarComMicrosoft} disabled={carregando}>
+            {carregando && <Loader2 className="size-4 animate-spin" />}
+            Entrar com Microsoft
           </Button>
+
+          <p className="mt-4 text-xs text-muted-foreground">
+            No primeiro acesso, seu perfil é criado automaticamente com nome e e-mail corporativos.
+            A liberação de papéis é feita por um administrador.
+          </p>
         </div>
       </div>
     </main>

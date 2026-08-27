@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/escritorio/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Perfil = Tables<"perfis">;
@@ -42,6 +42,7 @@ export async function carregarSessao(): Promise<Sessao | null> {
         nome_completo:
           (typeof metadata["nome_completo"] === "string" ? metadata["nome_completo"] : null) ??
           (typeof metadata["full_name"] === "string" ? metadata["full_name"] : null) ??
+          (typeof metadata["name"] === "string" ? metadata["name"] : null) ??
           user.email?.split("@")[0] ??
           "Colaborador",
       })

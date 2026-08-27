@@ -11,7 +11,7 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/escritorio/client";
 import { Button } from "@/components/ui/button";
 import { useSessao, iniciais } from "@/lib/hub";
 import { cn } from "@/lib/utils";

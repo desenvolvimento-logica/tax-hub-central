@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/escritorio/client";
 import { useSessao, sessaoQueryKey, formatarData } from "@/lib/hub";
 
 export const Route = createFileRoute("/_authenticated/perfil")({
   head: () => ({
     meta: [
       { title: "Meu perfil — Conecta Tributário" },
-      { name: "description", content: "Dados do colaborador, papéis atribuídos e troca de senha." },
+      { name: "description", content: "Dados do colaborador, papéis atribuídos e forma de acesso." },
       { property: "og:title", content: "Meu perfil — Conecta Tributário" },
       { property: "og:description", content: "Gerencie seus dados de acesso ao Conecta Tributário." },
     ],
@@ -28,7 +28,6 @@ function PerfilPage() {
 
   const [nome, setNome] = useState("");
   const [cargo, setCargo] = useState("");
-  const [novaSenha, setNovaSenha] = useState("");
 
   useEffect(() => {
     if (sessao) {
@@ -53,17 +52,6 @@ function PerfilPage() {
     onError: (e: Error) => toast.error("Erro ao salvar", { description: e.message }),
   });
 
-  const trocarSenha = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.auth.updateUser({ password: novaSenha });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      setNovaSenha("");
-      toast.success("Senha atualizada");
-    },
-    onError: (e: Error) => toast.error("Erro ao trocar senha", { description: e.message }),
-  });
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -112,26 +100,14 @@ function PerfilPage() {
         )}
       </section>
 
-      <section className="surface-panel space-y-4 p-6">
-        <h2 className="text-lg font-semibold">Trocar senha</h2>
-        <div className="space-y-2 sm:max-w-sm">
-          <Label htmlFor="senha">Nova senha</Label>
-          <Input
-            id="senha"
-            type="password"
-            minLength={6}
-            value={novaSenha}
-            onChange={(e) => setNovaSenha(e.target.value)}
-          />
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => trocarSenha.mutate()}
-          disabled={novaSenha.length < 6 || trocarSenha.isPending}
-        >
-          Atualizar senha
-        </Button>
+      <section className="surface-panel space-y-2 p-6">
+        <h2 className="text-lg font-semibold">Acesso</h2>
+        <p className="text-sm text-muted-foreground">
+          O acesso a este portal é feito pelo SSO Microsoft do escritório. A senha é gerenciada na
+          sua conta corporativa — não há troca de senha aqui.
+        </p>
       </section>
+
     </div>
   );
 }
