@@ -205,19 +205,6 @@ function AuthPage() {
                 </Button>
               </form>
 
-              <Button variant="outline" className="mt-3 w-full" onClick={() => irParaHub(destino)}>
-                Entrar pelo hub (Luz.IA)
-              </Button>
-
-              <Button
-                variant="ghost"
-                className="mt-2 w-full"
-                onClick={entrarComMicrosoft}
-                disabled={carregando}
-              >
-                {carregando && <Loader2 className="size-4 animate-spin" />}
-                Entrar com Microsoft
-              </Button>
             </>
           )}
 
