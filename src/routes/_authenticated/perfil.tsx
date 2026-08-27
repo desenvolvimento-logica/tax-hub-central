@@ -52,17 +52,6 @@ function PerfilPage() {
     onError: (e: Error) => toast.error("Erro ao salvar", { description: e.message }),
   });
 
-  const trocarSenha = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.auth.updateUser({ password: novaSenha });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      setNovaSenha("");
-      toast.success("Senha atualizada");
-    },
-    onError: (e: Error) => toast.error("Erro ao trocar senha", { description: e.message }),
-  });
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
