@@ -6,6 +6,8 @@ import { z } from "zod";
 
 import lampada from "@/assets/lampada-logica.png.asset.json";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/escritorio/client";
 import { consumirTokenDoHub, irParaHub } from "@/lib/sso-handoff";
 
