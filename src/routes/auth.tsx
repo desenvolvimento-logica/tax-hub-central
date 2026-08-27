@@ -51,11 +51,11 @@ function AuthPage() {
       return true;
     }
 
-    finalizarPopup().then((fechou) => {
+    finalizarPopup().then(async (fechou) => {
       if (fechou || !ativo) return;
-      supabase.auth.getSession().then(({ data }) => {
-        if (ativo && data.session) navigate({ to: destino, replace: true });
-      });
+      await consumirTokenDoHub();
+      const { data } = await supabase.auth.getSession();
+      if (ativo && data.session) navigate({ to: destino, replace: true });
     });
 
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
