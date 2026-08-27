@@ -19,7 +19,6 @@ import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedMensagensIndexRouteImport } from './routes/_authenticated/mensagens.index'
 import { Route as AuthenticatedMensagensIdRouteImport } from './routes/_authenticated/mensagens.$id'
 import { Route as AuthenticatedPerdcompIndexRouteImport } from './routes/_authenticated/perdcomp.index'
-import { Route as ApiPublicSincronizarGobRouteImport } from './routes/api/public/sincronizar-gob'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -73,11 +72,6 @@ const AuthenticatedPerdcompIndexRoute =
     path: '/perdcomp/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicSincronizarGobRoute = ApiPublicSincronizarGobRouteImport.update({
-  id: '/api/public/sincronizar-gob',
-  path: '/api/public/sincronizar-gob',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -87,7 +81,6 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/mensagens/$id': typeof AuthenticatedMensagensIdRoute
-  '/api/public/sincronizar-gob': typeof ApiPublicSincronizarGobRoute
   '/mensagens/': typeof AuthenticatedMensagensIndexRoute
   '/perdcomp/': typeof AuthenticatedPerdcompIndexRoute
 }
@@ -99,7 +92,6 @@ export interface FileRoutesByTo {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/mensagens/$id': typeof AuthenticatedMensagensIdRoute
-  '/api/public/sincronizar-gob': typeof ApiPublicSincronizarGobRoute
   '/mensagens': typeof AuthenticatedMensagensIndexRoute
   '/perdcomp': typeof AuthenticatedPerdcompIndexRoute
 }
@@ -113,7 +105,6 @@ export interface FileRoutesById {
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/mensagens/$id': typeof AuthenticatedMensagensIdRoute
-  '/api/public/sincronizar-gob': typeof ApiPublicSincronizarGobRoute
   '/_authenticated/mensagens/': typeof AuthenticatedMensagensIndexRoute
   '/_authenticated/perdcomp/': typeof AuthenticatedPerdcompIndexRoute
 }
@@ -127,7 +118,6 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/portal'
     | '/mensagens/$id'
-    | '/api/public/sincronizar-gob'
     | '/mensagens/'
     | '/perdcomp/'
   fileRoutesByTo: FileRoutesByTo
@@ -139,7 +129,6 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/portal'
     | '/mensagens/$id'
-    | '/api/public/sincronizar-gob'
     | '/mensagens'
     | '/perdcomp'
   id:
@@ -152,7 +141,6 @@ export interface FileRouteTypes {
     | '/_authenticated/perfil'
     | '/_authenticated/portal'
     | '/_authenticated/mensagens/$id'
-    | '/api/public/sincronizar-gob'
     | '/_authenticated/mensagens/'
     | '/_authenticated/perdcomp/'
   fileRoutesById: FileRoutesById
@@ -161,7 +149,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ApiPublicSincronizarGobRoute: typeof ApiPublicSincronizarGobRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -236,13 +223,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPerdcompIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/sincronizar-gob': {
-      id: '/api/public/sincronizar-gob'
-      path: '/api/public/sincronizar-gob'
-      fullPath: '/api/public/sincronizar-gob'
-      preLoaderRoute: typeof ApiPublicSincronizarGobRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -273,7 +253,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  ApiPublicSincronizarGobRoute: ApiPublicSincronizarGobRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

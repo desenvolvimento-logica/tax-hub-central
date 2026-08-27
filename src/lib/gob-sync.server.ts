@@ -16,9 +16,9 @@ export type ResultadoSync = {
 };
 
 /** Intervalo mínimo entre sincronizações automáticas (minutos). */
-const INTERVALO_MINUTOS = 15;
+const INTERVALO_MINUTOS = 5;
 /** Tempo após o qual uma execução travada é considerada abandonada (minutos). */
-const LEASE_MINUTOS = 20;
+const LEASE_MINUTOS = 15;
 
 export async function executarSyncGob(opcoes?: { forcar?: boolean }): Promise<ResultadoSync> {
   const forcar = opcoes?.forcar === true;

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Eye, EyeOff, RefreshCw, Search, Star } from "lucide-react";
@@ -35,7 +35,7 @@ import {
   dentroDoPeriodo,
   leituraEfetiva,
 } from "@/lib/gob";
-import { sincronizarGob, sincronizarGobAuto } from "@/lib/gob.functions";
+import { sincronizarGob } from "@/lib/gob.functions";
 
 export const Route = createFileRoute("/_authenticated/mensagens/")({
   head: () => ({
@@ -81,7 +81,6 @@ function simNao(valor: string, alvo: boolean): boolean {
 function ListaMensagens() {
   const queryClient = useQueryClient();
   const sincronizar = useServerFn(sincronizarGob);
-  const sincronizarAuto = useServerFn(sincronizarGobAuto);
 
   const [tipo, setTipo] = useState(TODOS);
   const [ni, setNi] = useState("");
@@ -146,29 +145,8 @@ function ListaMensagens() {
     onError: (e: Error) => toast.error("Erro ao sincronizar", { description: e.message }),
   });
 
-  // Sincronização automática: ao abrir a tela e a cada 15 min com a aba aberta.
-  // O servidor respeita um intervalo mínimo e um bloqueio de execução única.
-  useEffect(() => {
-    let ativo = true;
-    const rodar = async () => {
-      try {
-        const r = await sincronizarAuto({});
-        if (!ativo || r.ignorada || !r.ok) return;
-        if (r.novas > 0 || r.atualizadas > 0) {
-          queryClient.invalidateQueries({ queryKey: ["mensagens"] });
-          queryClient.invalidateQueries({ queryKey: ["sincronizacoes-gob"] });
-        }
-      } catch {
-        /* silencioso: sincronização automática não interrompe a navegação */
-      }
-    };
-    void rodar();
-    const intervalo = window.setInterval(rodar, 15 * 60 * 1000);
-    return () => {
-      ativo = false;
-      window.clearInterval(intervalo);
-    };
-  }, [sincronizarAuto, queryClient]);
+
+
 
   const opcoes = useMemo(() => {
     const lista = mensagens ?? [];
