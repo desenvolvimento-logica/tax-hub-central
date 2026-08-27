@@ -146,29 +146,8 @@ function ListaMensagens() {
     onError: (e: Error) => toast.error("Erro ao sincronizar", { description: e.message }),
   });
 
-  // Sincronização automática: ao abrir a tela e a cada 15 min com a aba aberta.
-  // O servidor respeita um intervalo mínimo e um bloqueio de execução única.
-  useEffect(() => {
-    let ativo = true;
-    const rodar = async () => {
-      try {
-        const r = await sincronizarAuto({});
-        if (!ativo || r.ignorada || !r.ok) return;
-        if (r.novas > 0 || r.atualizadas > 0) {
-          queryClient.invalidateQueries({ queryKey: ["mensagens"] });
-          queryClient.invalidateQueries({ queryKey: ["sincronizacoes-gob"] });
-        }
-      } catch {
-        /* silencioso: sincronização automática não interrompe a navegação */
-      }
-    };
-    void rodar();
-    const intervalo = window.setInterval(rodar, 15 * 60 * 1000);
-    return () => {
-      ativo = false;
-      window.clearInterval(intervalo);
-    };
-  }, [sincronizarAuto, queryClient]);
+
+
 
   const opcoes = useMemo(() => {
     const lista = mensagens ?? [];
