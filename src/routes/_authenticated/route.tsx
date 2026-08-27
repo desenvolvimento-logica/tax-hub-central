@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/escritorio/client";
+import { consumirTokenDoHub } from "@/lib/sso-handoff";
 import { Button } from "@/components/ui/button";
 import { useSessao, iniciais } from "@/lib/hub";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
+    // Token vindo do hub (Luz.IA) cria a sessão automaticamente.
+    await consumirTokenDoHub();
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
       throw redirect({ to: "/auth", search: { redirect: location.href } });

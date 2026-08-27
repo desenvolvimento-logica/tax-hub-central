@@ -7,6 +7,7 @@ import { z } from "zod";
 import lampada from "@/assets/lampada-logica.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/escritorio/client";
+import { consumirTokenDoHub, irParaHub } from "@/lib/sso-handoff";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
@@ -51,11 +52,11 @@ function AuthPage() {
       return true;
     }
 
-    finalizarPopup().then((fechou) => {
+    finalizarPopup().then(async (fechou) => {
       if (fechou || !ativo) return;
-      supabase.auth.getSession().then(({ data }) => {
-        if (ativo && data.session) navigate({ to: destino, replace: true });
-      });
+      await consumirTokenDoHub();
+      const { data } = await supabase.auth.getSession();
+      if (ativo && data.session) navigate({ to: destino, replace: true });
     });
 
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
@@ -140,14 +141,24 @@ function AuthPage() {
         <div className="w-full max-w-sm">
           <h2 className="text-2xl font-semibold">Acessar o portal</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            O acesso é feito com a conta Microsoft do escritório (SSO). Não há cadastro de senha
-            neste portal.
+            O acesso usa a sessão única do hub (Luz.IA). Se você já entrou no hub, a autenticação é
+            automática.
           </p>
 
-          <Button className="mt-8 w-full" onClick={entrarComMicrosoft} disabled={carregando}>
+          <Button className="mt-8 w-full" onClick={() => irParaHub(destino)}>
+            Entrar pelo hub (Luz.IA)
+          </Button>
+
+          <Button
+            variant="outline"
+            className="mt-3 w-full"
+            onClick={entrarComMicrosoft}
+            disabled={carregando}
+          >
             {carregando && <Loader2 className="size-4 animate-spin" />}
             Entrar com Microsoft
           </Button>
+
 
           <p className="mt-4 text-xs text-muted-foreground">
             No primeiro acesso, seu perfil é criado automaticamente com nome e e-mail corporativos.
