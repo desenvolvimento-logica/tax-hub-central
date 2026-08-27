@@ -70,9 +70,15 @@ function AuthPage() {
 
     finalizarPopup().then(async (fechou) => {
       if (fechou || !ativo) return;
+      // 1º: token de acesso emitido pelo Luz.IA
       await consumirTokenDoHub();
       const { data } = await supabase.auth.getSession();
-      if (ativo && data.session) navigate({ to: destino, replace: true });
+      if (ativo && data.session) {
+        navigate({ to: destino, replace: true });
+        return;
+      }
+      // 2º: sem token válido → mostra login padrão usuário/senha
+      if (ativo) setVerificandoHub(false);
     });
 
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
