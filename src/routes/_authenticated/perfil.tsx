@@ -112,26 +112,14 @@ function PerfilPage() {
         )}
       </section>
 
-      <section className="surface-panel space-y-4 p-6">
-        <h2 className="text-lg font-semibold">Trocar senha</h2>
-        <div className="space-y-2 sm:max-w-sm">
-          <Label htmlFor="senha">Nova senha</Label>
-          <Input
-            id="senha"
-            type="password"
-            minLength={6}
-            value={novaSenha}
-            onChange={(e) => setNovaSenha(e.target.value)}
-          />
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => trocarSenha.mutate()}
-          disabled={novaSenha.length < 6 || trocarSenha.isPending}
-        >
-          Atualizar senha
-        </Button>
+      <section className="surface-panel space-y-2 p-6">
+        <h2 className="text-lg font-semibold">Acesso</h2>
+        <p className="text-sm text-muted-foreground">
+          O acesso a este portal é feito pelo SSO Microsoft do escritório. A senha é gerenciada na
+          sua conta corporativa — não há troca de senha aqui.
+        </p>
       </section>
+
     </div>
   );
 }
