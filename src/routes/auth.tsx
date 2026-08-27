@@ -6,6 +6,8 @@ import { z } from "zod";
 
 import lampada from "@/assets/lampada-logica.png.asset.json";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/escritorio/client";
 import { consumirTokenDoHub, irParaHub } from "@/lib/sso-handoff";
 
@@ -36,6 +38,22 @@ function AuthPage() {
   const destino = redirect && redirect.startsWith("/") ? redirect : "/portal";
 
   const [carregando, setCarregando] = useState(false);
+  const [verificandoHub, setVerificandoHub] = useState(true);
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [entrando, setEntrando] = useState(false);
+
+  async function entrarComSenha(e: React.FormEvent) {
+    e.preventDefault();
+    setEntrando(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
+    setEntrando(false);
+    if (error) {
+      toast.error("Não foi possível entrar", { description: error.message });
+      return;
+    }
+    navigate({ to: destino, replace: true });
+  }
 
   useEffect(() => {
     let ativo = true;
@@ -54,9 +72,15 @@ function AuthPage() {
 
     finalizarPopup().then(async (fechou) => {
       if (fechou || !ativo) return;
+      // 1º: token de acesso emitido pelo Luz.IA
       await consumirTokenDoHub();
       const { data } = await supabase.auth.getSession();
-      if (ativo && data.session) navigate({ to: destino, replace: true });
+      if (ativo && data.session) {
+        navigate({ to: destino, replace: true });
+        return;
+      }
+      // 2º: sem token válido → mostra login padrão usuário/senha
+      if (ativo) setVerificandoHub(false);
     });
 
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
@@ -140,25 +164,62 @@ function AuthPage() {
       <div className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           <h2 className="text-2xl font-semibold">Acessar o portal</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            O acesso usa a sessão única do hub (Luz.IA). Se você já entrou no hub, a autenticação é
-            automática.
-          </p>
 
-          <Button className="mt-8 w-full" onClick={() => irParaHub(destino)}>
-            Entrar pelo hub (Luz.IA)
-          </Button>
+          {verificandoHub ? (
+            <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              Verificando sessão do hub (Luz.IA)…
+            </p>
+          ) : (
+            <>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Nenhuma sessão do hub (Luz.IA) foi recebida. Entre com usuário e senha.
+              </p>
 
-          <Button
-            variant="outline"
-            className="mt-3 w-full"
-            onClick={entrarComMicrosoft}
-            disabled={carregando}
-          >
-            {carregando && <Loader2 className="size-4 animate-spin" />}
-            Entrar com Microsoft
-          </Button>
+              <form className="mt-6 space-y-3" onSubmit={entrarComSenha}>
+                <div className="space-y-1">
+                  <Label htmlFor="email">E-mail corporativo</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="senha">Senha</Label>
+                  <Input
+                    id="senha"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={entrando}>
+                  {entrando && <Loader2 className="size-4 animate-spin" />}
+                  Entrar
+                </Button>
+              </form>
 
+              <Button variant="outline" className="mt-3 w-full" onClick={() => irParaHub(destino)}>
+                Entrar pelo hub (Luz.IA)
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="mt-2 w-full"
+                onClick={entrarComMicrosoft}
+                disabled={carregando}
+              >
+                {carregando && <Loader2 className="size-4 animate-spin" />}
+                Entrar com Microsoft
+              </Button>
+            </>
+          )}
 
           <p className="mt-4 text-xs text-muted-foreground">
             No primeiro acesso, seu perfil é criado automaticamente com nome e e-mail corporativos.
