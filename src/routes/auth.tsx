@@ -36,6 +36,22 @@ function AuthPage() {
   const destino = redirect && redirect.startsWith("/") ? redirect : "/portal";
 
   const [carregando, setCarregando] = useState(false);
+  const [verificandoHub, setVerificandoHub] = useState(true);
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [entrando, setEntrando] = useState(false);
+
+  async function entrarComSenha(e: React.FormEvent) {
+    e.preventDefault();
+    setEntrando(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
+    setEntrando(false);
+    if (error) {
+      toast.error("Não foi possível entrar", { description: error.message });
+      return;
+    }
+    navigate({ to: destino, replace: true });
+  }
 
   useEffect(() => {
     let ativo = true;
