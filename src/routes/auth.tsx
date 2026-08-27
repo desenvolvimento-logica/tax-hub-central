@@ -38,11 +38,30 @@ function AuthPage() {
 
   useEffect(() => {
     let ativo = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (ativo && data.session) navigate({ to: destino, replace: true });
+
+    // Quando esta página é o popup do SSO, devolve a sessão para a janela principal.
+    async function finalizarPopup() {
+      const temRetornoOAuth =
+        window.location.hash.includes("access_token") ||
+        new URLSearchParams(window.location.search).has("code") ||
+        new URLSearchParams(window.location.search).has("error");
+      if (!temRetornoOAuth || !window.opener || window.opener === window) return false;
+      await supabase.auth.getSession();
+      window.close();
+      return true;
+    }
+
+    finalizarPopup().then((fechou) => {
+      if (fechou || !ativo) return;
+      supabase.auth.getSession().then(({ data }) => {
+        if (ativo && data.session) navigate({ to: destino, replace: true });
+      });
     });
+
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) navigate({ to: destino, replace: true });
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
+        navigate({ to: destino, replace: true });
+      }
     });
     return () => {
       ativo = false;
@@ -55,19 +74,44 @@ function AuthPage() {
     const retorno = new URL("/auth", window.location.origin);
     if (redirect && redirect.startsWith("/")) retorno.searchParams.set("redirect", redirect);
 
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "azure",
       options: {
         redirectTo: retorno.toString(),
         scopes: "openid profile email offline_access",
+        skipBrowserRedirect: true,
       },
     });
 
-    if (error) {
+    if (error || !data?.url) {
       setCarregando(false);
-      toast.error("Falha no login Microsoft", { description: error.message });
+      toast.error("Falha no login Microsoft", { description: error?.message ?? "URL inválida" });
+      return;
     }
+
+    // A Microsoft bloqueia exibição em iframe: o fluxo precisa de janela própria.
+    const popup = window.open(data.url, "sso-microsoft", "width=520,height=680");
+    if (!popup) {
+      window.location.assign(data.url);
+      return;
+    }
+
+    const timer = window.setInterval(async () => {
+      const { data: sessao } = await supabase.auth.getSession();
+      if (sessao.session) {
+        window.clearInterval(timer);
+        setCarregando(false);
+        popup.close();
+        navigate({ to: destino, replace: true });
+        return;
+      }
+      if (popup.closed) {
+        window.clearInterval(timer);
+        setCarregando(false);
+      }
+    }, 800);
   }
+
 
   return (
     <main className="grid min-h-screen lg:grid-cols-2">
