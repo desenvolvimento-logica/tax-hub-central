@@ -35,7 +35,7 @@ import {
   dentroDoPeriodo,
   leituraEfetiva,
 } from "@/lib/gob";
-import { sincronizarGob } from "@/lib/gob.functions";
+import { sincronizarGob, sincronizarGobAuto } from "@/lib/gob.functions";
 
 export const Route = createFileRoute("/_authenticated/mensagens/")({
   head: () => ({
