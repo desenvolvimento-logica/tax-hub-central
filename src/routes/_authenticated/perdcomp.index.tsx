@@ -3,9 +3,6 @@
  * sem exigir novo acesso do colaborador.
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { ExternalLink } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 
 const PAINEL_URL = "https://perdcomp-pilot.lovable.app/painel";
 
