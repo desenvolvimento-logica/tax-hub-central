@@ -32,6 +32,21 @@ const ICONES: Record<string, LucideIcon> = {
 };
 
 
+// Sistemas espelhados dentro do portal não devem abrir em aba externa.
+const ROTAS_INTERNAS: Record<string, string> = {
+  "perdcomp-pilot.lovable.app": "/perdcomp",
+};
+
+function rotaInterna(url: string): string {
+  if (url.startsWith("/")) return url;
+  try {
+    const host = new URL(url).hostname;
+    return ROTAS_INTERNAS[host] ?? url;
+  } catch {
+    return url;
+  }
+}
+
 function Portal() {
   const { data: sessao } = useSessao();
 
@@ -86,7 +101,8 @@ function Portal() {
         <div className="grid gap-5 sm:grid-cols-2">
           {(sistemas ?? []).map((sistema) => {
             const Icone = ICONES[sistema.icone] ?? LayoutGrid;
-            const interno = sistema.url.startsWith("/");
+            const url = rotaInterna(sistema.url);
+            const interno = url.startsWith("/");
             return (
               <article key={sistema.id} className="surface-panel flex flex-col p-6">
                 <div className="flex items-start justify-between gap-3">
@@ -102,11 +118,11 @@ function Portal() {
                 <div className="mt-5">
                   {interno ? (
                     <Button asChild>
-                      <Link to={sistema.url as "/mensagens"}>Acessar</Link>
+                      <Link to={url as "/mensagens"}>Acessar</Link>
                     </Button>
                   ) : (
                     <Button asChild>
-                      <a href={sistema.url} target="_blank" rel="noreferrer">
+                      <a href={url} target="_blank" rel="noreferrer">
                         Acessar
                         <ExternalLink className="size-4" />
                       </a>

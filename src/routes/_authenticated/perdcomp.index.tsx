@@ -3,9 +3,6 @@
  * sem exigir novo acesso do colaborador.
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { ExternalLink } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 
 const PAINEL_URL = "https://perdcomp-pilot.lovable.app/painel";
 
@@ -40,11 +37,6 @@ function PainelPerdcomp() {
             Painel de acompanhamento das declarações PERDCOMP, exibido aqui dentro do Conecta Tributário.
           </p>
         </div>
-        <Button variant="outline" asChild>
-          <a href={PAINEL_URL} target="_blank" rel="noreferrer">
-            <ExternalLink className="mr-2 size-4" /> Abrir em nova aba
-          </a>
-        </Button>
       </div>
 
       <div className="flex-1 overflow-hidden rounded-lg border bg-card">
