@@ -7,6 +7,7 @@ import { z } from "zod";
 import lampada from "@/assets/lampada-logica.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/escritorio/client";
+import { consumirTokenDoHub, irParaHub } from "@/lib/sso-handoff";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
