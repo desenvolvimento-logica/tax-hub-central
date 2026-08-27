@@ -118,11 +118,11 @@ function Portal() {
                 <div className="mt-5">
                   {interno ? (
                     <Button asChild>
-                      <Link to={sistema.url as "/mensagens"}>Acessar</Link>
+                      <Link to={url as "/mensagens"}>Acessar</Link>
                     </Button>
                   ) : (
                     <Button asChild>
-                      <a href={sistema.url} target="_blank" rel="noreferrer">
+                      <a href={url} target="_blank" rel="noreferrer">
                         Acessar
                         <ExternalLink className="size-4" />
                       </a>
