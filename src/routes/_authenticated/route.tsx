@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
+    // Token vindo do hub (Luz.IA) cria a sessão automaticamente.
+    await consumirTokenDoHub();
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
       throw redirect({ to: "/auth", search: { redirect: location.href } });
