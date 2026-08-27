@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/perfil")({
   head: () => ({
     meta: [
       { title: "Meu perfil — Conecta Tributário" },
-      { name: "description", content: "Dados do colaborador, papéis atribuídos e troca de senha." },
+      { name: "description", content: "Dados do colaborador, papéis atribuídos e forma de acesso." },
       { property: "og:title", content: "Meu perfil — Conecta Tributário" },
       { property: "og:description", content: "Gerencie seus dados de acesso ao Conecta Tributário." },
     ],
@@ -28,7 +28,6 @@ function PerfilPage() {
 
   const [nome, setNome] = useState("");
   const [cargo, setCargo] = useState("");
-  const [novaSenha, setNovaSenha] = useState("");
 
   useEffect(() => {
     if (sessao) {
