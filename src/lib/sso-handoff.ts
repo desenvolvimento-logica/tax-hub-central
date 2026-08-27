@@ -2,7 +2,8 @@ import { supabase } from "@/integrations/escritorio/client";
 
 // URL do hub (Luz.IA) que emite a sessão. Pode ser sobrescrita por env.
 export const HUB_URL =
-  (import.meta.env["VITE_HUB_URL"] as string | undefined) ?? "https://luz-ia.lovable.app";
+  (import.meta.env["VITE_HUB_URL"] as string | undefined) ??
+  "https://hub-ivory-eta.vercel.app";
 
 function limparUrl() {
   if (typeof window === "undefined") return;
