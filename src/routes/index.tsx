@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { ArrowRight, KeyRound, LayoutGrid, ShieldCheck } from "lucide-react";
 
 import lampada from "@/assets/lampada-logica.png.asset.json";
@@ -6,6 +6,9 @@ import lampada from "@/assets/lampada-logica.png.asset.json";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: () => {
+    throw redirect({ to: "/auth" });
+  },
   head: () => ({
     meta: [
       { title: "Conecta Tributário — Portal do Departamento Tributário" },
