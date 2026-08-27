@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/escritorio/client";
+import { consumirTokenDoHub } from "@/lib/sso-handoff";
 import { Button } from "@/components/ui/button";
 import { useSessao, iniciais } from "@/lib/hub";
 import { cn } from "@/lib/utils";
