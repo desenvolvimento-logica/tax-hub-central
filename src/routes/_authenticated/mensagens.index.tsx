@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Eye, EyeOff, RefreshCw, Search, Star } from "lucide-react";
@@ -35,7 +35,7 @@ import {
   dentroDoPeriodo,
   leituraEfetiva,
 } from "@/lib/gob";
-import { sincronizarGob, sincronizarGobAuto } from "@/lib/gob.functions";
+import { sincronizarGob } from "@/lib/gob.functions";
 
 export const Route = createFileRoute("/_authenticated/mensagens/")({
   head: () => ({
@@ -81,7 +81,6 @@ function simNao(valor: string, alvo: boolean): boolean {
 function ListaMensagens() {
   const queryClient = useQueryClient();
   const sincronizar = useServerFn(sincronizarGob);
-  const sincronizarAuto = useServerFn(sincronizarGobAuto);
 
   const [tipo, setTipo] = useState(TODOS);
   const [ni, setNi] = useState("");

@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/escritorio/client";
 import { consumirTokenDoHub, esperarSessaoDoHub } from "@/lib/sso-handoff";
 import { Button } from "@/components/ui/button";
 import { useSessao, iniciais } from "@/lib/hub";
+import { useSyncGobAutomatico } from "@/lib/use-sync-gob-automatico";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -53,6 +54,9 @@ function AppShell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Sincroniza com o GOB ao abrir o app e a cada 5 min enquanto ele estiver aberto.
+  useSyncGobAutomatico();
 
   async function sair() {
     await queryClient.cancelQueries();
