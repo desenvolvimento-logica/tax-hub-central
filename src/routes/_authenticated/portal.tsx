@@ -32,6 +32,21 @@ const ICONES: Record<string, LucideIcon> = {
 };
 
 
+// Sistemas espelhados dentro do portal não devem abrir em aba externa.
+const ROTAS_INTERNAS: Record<string, string> = {
+  "perdcomp-pilot.lovable.app": "/perdcomp",
+};
+
+function rotaInterna(url: string): string {
+  if (url.startsWith("/")) return url;
+  try {
+    const host = new URL(url).hostname;
+    return ROTAS_INTERNAS[host] ?? url;
+  } catch {
+    return url;
+  }
+}
+
 function Portal() {
   const { data: sessao } = useSessao();
 
