@@ -1,8 +1,44 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { sincronizarGobAuto } from "@/lib/gob.functions";
+
+const INTERVALO_MS = 5 * 60 * 1000;
+
+/** Momento (epoch ms) da próxima sincronização automática, compartilhado com a UI. */
+let proximaEm: number | null = null;
+const inscritos = new Set<() => void>();
+
+function definirProxima(valor: number | null) {
+  proximaEm = valor;
+  inscritos.forEach((fn) => fn());
+}
+
+/** Segundos restantes até a próxima sincronização automática (null quando não agendada). */
+export function useProximaSincronizacao(): number | null {
+  const [segundos, setSegundos] = useState<number | null>(null);
+
+  useEffect(() => {
+    const calcular = () =>
+      setSegundos(proximaEm ? Math.max(0, Math.round((proximaEm - Date.now()) / 1000)) : null);
+    calcular();
+    inscritos.add(calcular);
+    const t = window.setInterval(calcular, 1000);
+    return () => {
+      inscritos.delete(calcular);
+      window.clearInterval(t);
+    };
+  }, []);
+
+  return segundos;
+}
+
+export function formatarContagem(segundos: number): string {
+  const m = Math.floor(segundos / 60);
+  const s = segundos % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
 
 /**
  * Sincronização automática com o GOB enquanto o app está aberto:
@@ -25,13 +61,17 @@ export function useSyncGobAutomatico() {
         }
       } catch {
         /* silencioso: a sincronização automática não interrompe a navegação */
+      } finally {
+        if (ativo) definirProxima(Date.now() + INTERVALO_MS);
       }
     };
 
+    definirProxima(Date.now() + INTERVALO_MS);
     void rodar();
-    const intervalo = window.setInterval(rodar, 5 * 60 * 1000);
+    const intervalo = window.setInterval(rodar, INTERVALO_MS);
     return () => {
       ativo = false;
+      definirProxima(null);
       window.clearInterval(intervalo);
     };
   }, [sincronizarAuto, queryClient]);

@@ -36,6 +36,7 @@ import {
   leituraEfetiva,
 } from "@/lib/gob";
 import { sincronizarGob } from "@/lib/gob.functions";
+import { formatarContagem, useProximaSincronizacao } from "@/lib/use-sync-gob-automatico";
 
 export const Route = createFileRoute("/_authenticated/mensagens/")({
   head: () => ({
@@ -81,6 +82,7 @@ function simNao(valor: string, alvo: boolean): boolean {
 function ListaMensagens() {
   const queryClient = useQueryClient();
   const sincronizar = useServerFn(sincronizarGob);
+  const segundosRestantes = useProximaSincronizacao();
 
   const [tipo, setTipo] = useState(TODOS);
   const [ni, setNi] = useState("");
@@ -241,7 +243,11 @@ function ListaMensagens() {
         <div className="text-right">
           <Button onClick={() => executarSync.mutate()} disabled={executarSync.isPending}>
             <RefreshCw className={executarSync.isPending ? "size-4 animate-spin" : "size-4"} />
-            Sincronizar com o GOB
+            {executarSync.isPending
+              ? "Sincronizando…"
+              : segundosRestantes !== null
+                ? `Próxima sincronização em ${formatarContagem(segundosRestantes)}`
+                : "Sincronizar com o GOB"}
           </Button>
           <p className="mt-2 text-xs text-muted-foreground">
             {ultimaSync
