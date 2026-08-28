@@ -84,56 +84,94 @@ function AppShell() {
 
   return (
     <div className="flex min-h-screen w-full bg-background">
-      <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
-        <Link to="/portal" className="flex items-center gap-3 px-5 py-6">
-          <span className="flex size-9 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-            <img src={lampada.url} alt="Símbolo Lógica" className="size-5 object-contain" />
-          </span>
-          <span className="font-display text-xs font-semibold uppercase tracking-[0.16em]">
-            Conecta Tributário
-          </span>
-        </Link>
+      <aside
+        className={cn(
+          "hidden shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 md:flex",
+          recolhido ? "w-16" : "w-64",
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center gap-2 py-6",
+            recolhido ? "flex-col px-2" : "px-4",
+          )}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={alternarMenu}
+            aria-label={recolhido ? "Expandir menu" : "Recolher menu"}
+            title={recolhido ? "Expandir menu" : "Recolher menu"}
+            className="text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <Menu className="size-5" />
+          </Button>
+          <Link to="/portal" className="flex min-w-0 items-center gap-3" title="Conecta Tributário">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+              <img src={lampada.url} alt="Símbolo Lógica" className="size-5 object-contain" />
+            </span>
+            {!recolhido && (
+              <span className="font-display text-xs font-semibold uppercase tracking-[0.16em]">
+                Conecta Tributário
+              </span>
+            )}
+          </Link>
+        </div>
 
-        <nav className="flex-1 space-y-1 px-3">
+        <nav className={cn("flex-1 space-y-1", recolhido ? "px-2" : "px-3")}>
           {NAV.filter((item) => !item.admin || sessao?.isAdmin).map((item) => {
             const ativo = pathname === item.to || pathname.startsWith(`${item.to}/`);
             return (
               <Link
                 key={item.to}
                 to={item.to}
+                title={item.label}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                  "flex items-center gap-3 rounded-md py-2 text-sm transition-colors",
+                  recolhido ? "justify-center px-0" : "px-3",
                   ativo
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 )}
               >
-                <item.icon className="size-4" />
-                {item.label}
+                <item.icon className="size-4 shrink-0" />
+                {!recolhido && item.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t border-sidebar-border p-3">
-          <div className="flex items-center gap-3 px-2 py-2">
-            <span className="flex size-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold">
+        <div className={cn("border-t border-sidebar-border", recolhido ? "p-2" : "p-3")}>
+          <div
+            className={cn(
+              "flex items-center gap-3 py-2",
+              recolhido ? "justify-center px-0" : "px-2",
+            )}
+            title={sessao?.perfil.nome_completo ?? undefined}
+          >
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold">
               {iniciais(sessao?.perfil.nome_completo ?? "?")}
             </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{sessao?.perfil.nome_completo}</p>
-              <p className="truncate text-xs text-sidebar-foreground/60">
-                {sessao?.papeis.join(", ") || "sem papel"}
-              </p>
-            </div>
+            {!recolhido && (
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{sessao?.perfil.nome_completo}</p>
+                <p className="truncate text-xs text-sidebar-foreground/60">
+                  {sessao?.papeis.join(", ") || "sem papel"}
+                </p>
+              </div>
+            )}
           </div>
           <Button
             variant="ghost"
-            className="w-full justify-start text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            title="Sair"
+            className={cn(
+              "w-full text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              recolhido ? "justify-center px-0" : "justify-start",
+            )}
             onClick={sair}
           >
             <LogOut className="size-4" />
-            Sair
+            {!recolhido && "Sair"}
           </Button>
         </div>
       </aside>
