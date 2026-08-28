@@ -1,11 +1,13 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import lampada from "@/assets/lampada-logica.png.asset.json";
 import {
   FileStack,
   LayoutGrid,
   LogOut,
   MailCheck,
+  Menu,
   Settings2,
   Sparkles,
   UserRound,
@@ -49,11 +51,26 @@ const NAV = [
 ] as const;
 
 
+const CHAVE_MENU = "conecta:menu-recolhido";
+
 function AppShell() {
   const { data: sessao } = useSessao();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [recolhido, setRecolhido] = useState(false);
+
+  useEffect(() => {
+    setRecolhido(localStorage.getItem(CHAVE_MENU) === "1");
+  }, []);
+
+  function alternarMenu() {
+    setRecolhido((valor) => {
+      const proximo = !valor;
+      localStorage.setItem(CHAVE_MENU, proximo ? "1" : "0");
+      return proximo;
+    });
+  }
 
   // Sincroniza com o GOB ao abrir o app e a cada 5 min enquanto ele estiver aberto.
   useSyncGobAutomatico();
