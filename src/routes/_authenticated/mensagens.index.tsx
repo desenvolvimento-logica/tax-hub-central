@@ -36,6 +36,7 @@ import {
   leituraEfetiva,
 } from "@/lib/gob";
 import { sincronizarGob } from "@/lib/gob.functions";
+import { formatarContagem, useProximaSincronizacao } from "@/lib/use-sync-gob-automatico";
 
 export const Route = createFileRoute("/_authenticated/mensagens/")({
   head: () => ({
