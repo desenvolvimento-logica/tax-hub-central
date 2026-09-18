@@ -12,13 +12,18 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as SoloRouteImport } from './routes/solo'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedBoasVindasRouteImport } from './routes/_authenticated/boas-vindas'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
+import { Route as SoloBoasVindasRouteImport } from './routes/solo.boas-vindas'
+import { Route as SoloPerdcompRouteImport } from './routes/solo.perdcomp'
 import { Route as AuthenticatedMensagensIndexRouteImport } from './routes/_authenticated/mensagens.index'
 import { Route as AuthenticatedMensagensIdRouteImport } from './routes/_authenticated/mensagens.$id'
 import { Route as AuthenticatedPerdcompIndexRouteImport } from './routes/_authenticated/perdcomp.index'
+import { Route as SoloMensagensIndexRouteImport } from './routes/solo.mensagens.index'
+import { Route as SoloMensagensIdRouteImport } from './routes/solo.mensagens.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -32,6 +37,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SoloRoute = SoloRouteImport.update({
+  id: '/solo',
+  path: '/solo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -54,6 +64,16 @@ const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   path: '/portal',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const SoloBoasVindasRoute = SoloBoasVindasRouteImport.update({
+  id: '/boas-vindas',
+  path: '/boas-vindas',
+  getParentRoute: () => SoloRoute,
+} as any)
+const SoloPerdcompRoute = SoloPerdcompRouteImport.update({
+  id: '/perdcomp',
+  path: '/perdcomp',
+  getParentRoute: () => SoloRoute,
+} as any)
 const AuthenticatedMensagensIndexRoute =
   AuthenticatedMensagensIndexRouteImport.update({
     id: '/mensagens/',
@@ -72,83 +92,124 @@ const AuthenticatedPerdcompIndexRoute =
     path: '/perdcomp/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const SoloMensagensIndexRoute = SoloMensagensIndexRouteImport.update({
+  id: '/mensagens/',
+  path: '/mensagens/',
+  getParentRoute: () => SoloRoute,
+} as any)
+const SoloMensagensIdRoute = SoloMensagensIdRouteImport.update({
+  id: '/mensagens/$id',
+  path: '/mensagens/$id',
+  getParentRoute: () => SoloRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/solo': typeof SoloRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/boas-vindas': typeof AuthenticatedBoasVindasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/solo/boas-vindas': typeof SoloBoasVindasRoute
+  '/solo/perdcomp': typeof SoloPerdcompRoute
   '/mensagens/$id': typeof AuthenticatedMensagensIdRoute
+  '/solo/mensagens/$id': typeof SoloMensagensIdRoute
   '/mensagens/': typeof AuthenticatedMensagensIndexRoute
   '/perdcomp/': typeof AuthenticatedPerdcompIndexRoute
+  '/solo/mensagens/': typeof SoloMensagensIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/solo': typeof SoloRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/boas-vindas': typeof AuthenticatedBoasVindasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/solo/boas-vindas': typeof SoloBoasVindasRoute
+  '/solo/perdcomp': typeof SoloPerdcompRoute
   '/mensagens/$id': typeof AuthenticatedMensagensIdRoute
+  '/solo/mensagens/$id': typeof SoloMensagensIdRoute
   '/mensagens': typeof AuthenticatedMensagensIndexRoute
   '/perdcomp': typeof AuthenticatedPerdcompIndexRoute
+  '/solo/mensagens': typeof SoloMensagensIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/solo': typeof SoloRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/boas-vindas': typeof AuthenticatedBoasVindasRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
+  '/solo/boas-vindas': typeof SoloBoasVindasRoute
+  '/solo/perdcomp': typeof SoloPerdcompRoute
   '/_authenticated/mensagens/$id': typeof AuthenticatedMensagensIdRoute
+  '/solo/mensagens/$id': typeof SoloMensagensIdRoute
   '/_authenticated/mensagens/': typeof AuthenticatedMensagensIndexRoute
   '/_authenticated/perdcomp/': typeof AuthenticatedPerdcompIndexRoute
+  '/solo/mensagens/': typeof SoloMensagensIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/solo'
     | '/admin'
     | '/boas-vindas'
     | '/perfil'
     | '/portal'
+    | '/solo/boas-vindas'
+    | '/solo/perdcomp'
     | '/mensagens/$id'
+    | '/solo/mensagens/$id'
     | '/mensagens/'
     | '/perdcomp/'
+    | '/solo/mensagens/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/solo'
     | '/admin'
     | '/boas-vindas'
     | '/perfil'
     | '/portal'
+    | '/solo/boas-vindas'
+    | '/solo/perdcomp'
     | '/mensagens/$id'
+    | '/solo/mensagens/$id'
     | '/mensagens'
     | '/perdcomp'
+    | '/solo/mensagens'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/solo'
     | '/_authenticated/admin'
     | '/_authenticated/boas-vindas'
     | '/_authenticated/perfil'
     | '/_authenticated/portal'
+    | '/solo/boas-vindas'
+    | '/solo/perdcomp'
     | '/_authenticated/mensagens/$id'
+    | '/solo/mensagens/$id'
     | '/_authenticated/mensagens/'
     | '/_authenticated/perdcomp/'
+    | '/solo/mensagens/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  SoloRoute: typeof SoloRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solo': {
+      id: '/solo'
+      path: '/solo'
+      fullPath: '/solo'
+      preLoaderRoute: typeof SoloRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -202,6 +270,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/solo/boas-vindas': {
+      id: '/solo/boas-vindas'
+      path: '/boas-vindas'
+      fullPath: '/solo/boas-vindas'
+      preLoaderRoute: typeof SoloBoasVindasRouteImport
+      parentRoute: typeof SoloRoute
+    }
+    '/solo/perdcomp': {
+      id: '/solo/perdcomp'
+      path: '/perdcomp'
+      fullPath: '/solo/perdcomp'
+      preLoaderRoute: typeof SoloPerdcompRouteImport
+      parentRoute: typeof SoloRoute
+    }
     '/_authenticated/mensagens/': {
       id: '/_authenticated/mensagens/'
       path: '/mensagens'
@@ -222,6 +304,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/perdcomp/'
       preLoaderRoute: typeof AuthenticatedPerdcompIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/solo/mensagens/': {
+      id: '/solo/mensagens/'
+      path: '/mensagens'
+      fullPath: '/solo/mensagens/'
+      preLoaderRoute: typeof SoloMensagensIndexRouteImport
+      parentRoute: typeof SoloRoute
+    }
+    '/solo/mensagens/$id': {
+      id: '/solo/mensagens/$id'
+      path: '/mensagens/$id'
+      fullPath: '/solo/mensagens/$id'
+      preLoaderRoute: typeof SoloMensagensIdRouteImport
+      parentRoute: typeof SoloRoute
     }
   }
 }
@@ -249,10 +345,27 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface SoloRouteChildren {
+  SoloBoasVindasRoute: typeof SoloBoasVindasRoute
+  SoloPerdcompRoute: typeof SoloPerdcompRoute
+  SoloMensagensIdRoute: typeof SoloMensagensIdRoute
+  SoloMensagensIndexRoute: typeof SoloMensagensIndexRoute
+}
+
+const SoloRouteChildren: SoloRouteChildren = {
+  SoloBoasVindasRoute: SoloBoasVindasRoute,
+  SoloPerdcompRoute: SoloPerdcompRoute,
+  SoloMensagensIdRoute: SoloMensagensIdRoute,
+  SoloMensagensIndexRoute: SoloMensagensIndexRoute,
+}
+
+const SoloRouteWithChildren = SoloRoute._addFileChildren(SoloRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  SoloRoute: SoloRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

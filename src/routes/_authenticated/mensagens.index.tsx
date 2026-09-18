@@ -54,7 +54,7 @@ export const Route = createFileRoute("/_authenticated/mensagens/")({
       },
     ],
   }),
-  component: ListaMensagens,
+  component: () => <ListaMensagens />,
 });
 
 type MensagemComRelacoes = Mensagem & {
@@ -79,7 +79,8 @@ function simNao(valor: string, alvo: boolean): boolean {
   return valor === "sim" ? alvo : !alvo;
 }
 
-function ListaMensagens() {
+/** `solo` = tela avulsa (fora do Conecta Tributário), muda apenas o destino dos links. */
+export function ListaMensagens({ solo = false }: { solo?: boolean }) {
   const queryClient = useQueryClient();
   const sincronizar = useServerFn(sincronizarGob);
   const segundosRestantes = useProximaSincronizacao();
@@ -540,7 +541,7 @@ function ListaMensagens() {
                   </TableCell>
                   <TableCell className="max-w-[280px]">
                     <Link
-                      to="/mensagens/$id"
+                      to={solo ? "/solo/mensagens/$id" : "/mensagens/$id"}
                       params={{ id: m.id }}
                       className="line-clamp-2 text-sm font-medium hover:underline"
                     >
