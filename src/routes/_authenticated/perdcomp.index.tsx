@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/perdcomp/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: PainelPerdcomp,
+  component: () => <PainelPerdcomp />,
 });
 
 export function PainelPerdcomp() {

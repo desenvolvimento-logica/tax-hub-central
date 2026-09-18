@@ -33,10 +33,8 @@ export const Route = createFileRoute("/_authenticated/boas-vindas")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: BoasVindas,
+  component: () => <BoasVindas />,
 });
-
-export { BoasVindas };
 
 /** Ajusta o tamanho da fonte até o texto caber na linha da arte (como no original). */
 function useTextoAjustado(texto: string, maxPx: number, minPx: number) {
@@ -68,7 +66,7 @@ function useTextoAjustado(texto: string, maxPx: number, minPx: number) {
   return ref;
 }
 
-function BoasVindas() {
+export function BoasVindas() {
   const [empresa, setEmpresa] = useState("");
   const [colaborador, setColaborador] = useState("");
   const [erro, setErro] = useState("");
