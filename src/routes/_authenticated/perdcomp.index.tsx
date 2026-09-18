@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/perdcomp/")({
   component: PainelPerdcomp,
 });
 
-function PainelPerdcomp() {
+export function PainelPerdcomp() {
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">

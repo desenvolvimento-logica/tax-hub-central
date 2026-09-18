@@ -36,6 +36,8 @@ export const Route = createFileRoute("/_authenticated/boas-vindas")({
   component: BoasVindas,
 });
 
+export { BoasVindas };
+
 /** Ajusta o tamanho da fonte até o texto caber na linha da arte (como no original). */
 function useTextoAjustado(texto: string, maxPx: number, minPx: number) {
   const ref = useRef<HTMLDivElement | null>(null);

@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/mensagens/$id")({
       { property: "og:description", content: "Tratamento e histórico de uma mensagem do e-CAC." },
     ],
   }),
-  component: DetalheMensagem,
+  component: () => <DetalheMensagem />,
 });
 
 type Detalhe = Mensagem & {
@@ -66,7 +66,9 @@ type Detalhe = Mensagem & {
   }[];
 };
 
-function DetalheMensagem() {
+/** `solo` = tela avulsa (fora do Conecta Tributário), muda apenas o destino dos links. */
+export function DetalheMensagem({ solo = false }: { solo?: boolean }) {
+  const rotaLista = solo ? "/solo/mensagens" : "/mensagens";
   const { id } = Route.useParams();
   const queryClient = useQueryClient();
   const { data: sessao } = useSessao();
