@@ -158,7 +158,7 @@ export function DetalheMensagem({ solo = false }: { solo?: boolean }) {
       <div className="surface-panel mx-auto max-w-lg p-8 text-center">
         <h1 className="text-lg font-semibold">Mensagem não encontrada</h1>
         <Button asChild variant="outline" className="mt-4">
-          <Link to="/mensagens">Voltar à lista</Link>
+          <Link to={rotaLista}>Voltar à lista</Link>
         </Button>
       </div>
     );
@@ -189,7 +189,7 @@ export function DetalheMensagem({ solo = false }: { solo?: boolean }) {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
-        <Link to="/mensagens">
+        <Link to={rotaLista}>
           <ArrowLeft className="size-4" />
           Voltar
         </Link>
