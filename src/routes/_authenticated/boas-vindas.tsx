@@ -11,6 +11,8 @@ import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/escritorio/client";
+import { useSessao } from "@/lib/hub";
 import pagina1 from "@/assets/bv-original-p1.jpg.asset.json";
 import pagina2 from "@/assets/bv-original-p2.jpg.asset.json";
 
