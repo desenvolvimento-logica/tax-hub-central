@@ -72,6 +72,7 @@ export function BoasVindas() {
   const [empresa, setEmpresa] = useState("");
   const [colaborador, setColaborador] = useState("");
   const [erro, setErro] = useState("");
+  const { data: sessao } = useSessao();
 
   const textoCliente = empresa.trim() ? `${empresa.trim().toUpperCase()},` : "NOME DO CLIENTE,";
   const textoColaborador = colaborador.trim() || "NOME DO COLABORADOR";
@@ -79,12 +80,31 @@ export function BoasVindas() {
   const refCliente = useTextoAjustado(textoCliente, 46, 25);
   const refColaborador = useTextoAjustado(textoColaborador, 18, 11);
 
-  function imprimir() {
+  async function imprimir() {
     if (!empresa.trim() || !colaborador.trim()) {
       setErro("Preencha o nome do cliente e do colaborador responsável.");
       return;
     }
     setErro("");
+
+    // Registro auxiliar para os relatórios do Luz.IA — nunca bloqueia o PDF.
+    if (sessao?.perfil?.id) {
+      const cliente = empresa.trim();
+      const registro = supabase as unknown as {
+        from: (tabela: string) => {
+          insert: (valores: Record<string, unknown>) => Promise<{ error: unknown }>;
+        };
+      };
+      try {
+        await registro.from("boas_vindas").insert({
+          colaborador_id: sessao.perfil.id,
+          cliente,
+        });
+      } catch {
+        // ignorado de propósito
+      }
+    }
+
     setTimeout(() => window.print(), 120);
   }
 
