@@ -124,7 +124,6 @@ export function instalarListenerDoHub() {
     if (!veioDaJanelaDoHub) return;
 
     const dados = event.data as MensagemSessao | undefined;
-    if (dados?.type !== "LUZIA_SESSION" && dados?.type !== "SUPABASE_SESSION") return;
     const sessao = extrairSessao(dados);
     if (!sessao) return;
 
@@ -147,7 +146,7 @@ export function instalarListenerDoHub() {
 }
 
 /** Aguarda (com timeout curto) a sessão chegar por postMessage do hub. */
-export async function esperarSessaoDoHub(ms = 1200): Promise<boolean> {
+export async function esperarSessaoDoHub(ms = 5000): Promise<boolean> {
   if (typeof window === "undefined") return false;
   if (!(window.parent && window.parent !== window) && !window.opener) return false;
   if (sessaoRecebida) return true;
