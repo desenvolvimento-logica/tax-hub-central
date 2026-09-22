@@ -37,11 +37,33 @@ const ROTAS_INTERNAS: Record<string, string> = {
   "perdcomp-pilot.lovable.app": "/perdcomp",
 };
 
-function rotaInterna(url: string): string {
-  if (url.startsWith("/")) return url;
+// Quando o cadastro aponta para o próprio Conecta (ou para a home/portal),
+// abrimos direto a tela do módulo em vez de cair no portal outra vez.
+const ROTAS_POR_ICONE: Record<string, string> = {
+  MailCheck: "/mensagens",
+  FileStack: "/perdcomp",
+  Sparkles: "/boas-vindas",
+};
+
+const HOSTS_PROPRIOS = ["tax-hub-central.lovable.app", "conecta"];
+
+function rotaInterna(url: string, icone: string): string {
+  const destinoModulo = ROTAS_POR_ICONE[icone];
+  const semDestino = (caminho: string) =>
+    caminho === "" || caminho === "/" || caminho === "/portal" || caminho === "/auth";
+
+  if (url.startsWith("/")) {
+    return semDestino(url) && destinoModulo ? destinoModulo : url;
+  }
   try {
-    const host = new URL(url).hostname;
-    return ROTAS_INTERNAS[host] ?? url;
+    const { hostname, pathname } = new URL(url);
+    const proprio =
+      (typeof window !== "undefined" && hostname === window.location.hostname) ||
+      HOSTS_PROPRIOS.some((h) => hostname.includes(h));
+    if (proprio) {
+      return semDestino(pathname) && destinoModulo ? destinoModulo : pathname;
+    }
+    return ROTAS_INTERNAS[hostname] ?? url;
   } catch {
     return url;
   }
@@ -101,7 +123,7 @@ function Portal() {
         <div className="grid gap-5 sm:grid-cols-2">
           {(sistemas ?? []).map((sistema) => {
             const Icone = ICONES[sistema.icone] ?? LayoutGrid;
-            const url = rotaInterna(sistema.url);
+            const url = rotaInterna(sistema.url, sistema.icone);
             const interno = url.startsWith("/");
             return (
               <article key={sistema.id} className="surface-panel flex flex-col p-6">
