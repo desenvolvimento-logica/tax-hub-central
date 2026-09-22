@@ -123,7 +123,7 @@ function Portal() {
         <div className="grid gap-5 sm:grid-cols-2">
           {(sistemas ?? []).map((sistema) => {
             const Icone = ICONES[sistema.icone] ?? LayoutGrid;
-            const url = rotaInterna(sistema.url);
+            const url = rotaInterna(sistema.url, sistema.icone);
             const interno = url.startsWith("/");
             return (
               <article key={sistema.id} className="surface-panel flex flex-col p-6">
