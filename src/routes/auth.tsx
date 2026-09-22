@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/escritorio/client";
-import { consumirTokenDoHub } from "@/lib/sso-handoff";
+import { consumirTokenDoHub, esperarSessaoDoHub } from "@/lib/sso-handoff";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
@@ -77,7 +77,13 @@ function AuthPage() {
       if (fechou || !ativo) return;
       // 1º: token de acesso emitido pelo Luz.IA
       await consumirTokenDoHub();
-      const { data } = await supabase.auth.getSession();
+      let { data } = await supabase.auth.getSession();
+      if (!data.session && (window.parent !== window || window.opener)) {
+        setVerificandoHub(true);
+        if (await esperarSessaoDoHub()) {
+          ({ data } = await supabase.auth.getSession());
+        }
+      }
       if (ativo && data.session) {
         navigate({ to: destino, replace: true });
         return;
